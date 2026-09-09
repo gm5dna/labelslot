@@ -1,5 +1,5 @@
 {
-  "_comment": "All dimensions in mm. Positions number left-to-right, top-to-bottom, starting at 1. 'source' must cite where the margins and gaps came from (vendor template PDF). Entries marked 'TODO slice 1' hold sanity-check figures derived by dividing the leftover page evenly; slice 1 replaces them from the vendor templates and cites the source. A target with cols*rows == 1 and label == page is a single-label medium (thermal roll); rotation by 90 degrees is permitted only for those.",
+  "_comment": "All dimensions in mm. Positions number left-to-right, top-to-bottom, starting at 1. 'source' must cite where the margins and gaps came from (vendor template PDF). A target with cols*rows == 1 and label == page is a single-label medium (thermal roll); rotation by 90 degrees is permitted only for those.",
   "sheets": [
     {
       "id": "ll04",
@@ -9,11 +9,11 @@
       "cols": 2,
       "rows": 2,
       "label": { "w": 99.1, "h": 139 },
-      "marginLeft": 5.9,
+      "marginLeft": 4.65,
       "marginTop": 9.5,
-      "gapX": 0,
+      "gapX": 2.5,
       "gapY": 0,
-      "source": "TODO slice 1: sanity figures only, (210-2*99.1)/2 and (297-2*139)/2. Replace from Avery L7169 template and Label Planet LP4/99 template and cite URLs."
+      "source": "Label Planet LP4/99 template specification (https://www.labelplanet.co.uk/label-templates-for-rounded-rectangle-labels/label-templates-4-per-sheet-lp4-99/): top margin 9.5mm, bottom margin 9.5mm, left margin 4.65mm, right margin 4.65mm, horizontal pitch 101.6mm, vertical pitch 139mm (label height, so no vertical gap). gapX = 101.6 - 99.1 = 2.5mm. Sanity check: 2*4.65 + 2*99.1 + 2.5 = 210.0mm exactly; 2*9.5 + 2*139 = 297.0mm exactly. Avery's own L7169 template page (avery.co.uk/template-l7169) is behind a Cloudflare challenge and could not be fetched (403 on every attempt, including a browser user agent); a third-party (glabels/pdf-labels project) Avery template file gives x0=14.2pt(~5.0mm)/y0=20pt(~7.1mm), which does not sanity-check against the A4 page (off by ~4.9mm vertically) and was discarded in favour of Label Planet's directly-quoted, self-consistent figures."
     },
     {
       "id": "lp4-105",
@@ -27,7 +27,7 @@
       "marginTop": 0,
       "gapX": 0,
       "gapY": 0,
-      "source": "TODO slice 1: zero margins by definition (A4 quartered); confirm against Label Planet LP4/105 template and cite URL."
+      "source": "Label Planet LP4/105 template specification (https://www.labelplanet.co.uk/label-templates-for-square-cut-rectangle-labels/label-templates-4-per-sheet-lp4-105/): top/bottom/left/right margin 0mm, horizontal pitch 105mm and vertical pitch 148.5mm (both equal to the label size, so no gaps). Confirms the zero-margin, zero-gap A4-quartered assumption exactly."
     },
     {
       "id": "l7168",
@@ -41,7 +41,7 @@
       "marginTop": 5,
       "gapX": 0,
       "gapY": 0,
-      "source": "TODO slice 1: sanity figures only, (210-199.6)/2 and (297-2*143.5)/2. Replace from Avery L7168 template and cite URL."
+      "source": "Avery's own L7168 template page (avery.co.uk/template-l7168) is behind a Cloudflare challenge and could not be fetched. Label Planet LP2/199, the same 199.6 x 143.5mm 2-per-sheet size (https://www.labelplanet.co.uk/label-templates-for-rounded-rectangle-labels/label-templates-2-per-sheet-lp2-199/): top margin 5mm, bottom margin 5mm, left margin 5.2mm, right margin 5.2mm, horizontal pitch 199.6mm and vertical pitch 143.5mm (both equal to the label size, no gaps; page states 'no gaps between labels'). These happen to equal the original evenly-divided sanity figures. Sanity check: 2*5.2 + 199.6 = 210.0mm exactly; 2*5 + 2*143.5 = 297.0mm exactly."
     },
     {
       "id": "6x4",
