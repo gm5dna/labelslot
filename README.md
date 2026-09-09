@@ -4,7 +4,7 @@ Move a shipping label PDF from eBay or Royal Mail Click & Drop to any position o
 
 ![Before and after](docs/before-after.svg)
 
-Before: the eBay PDF draws the label at position 1 of a 4-per-sheet A4 sheet. After: `labelslot` redraws the same label, unscaled, at position 2, so the rest of a part-used sheet isn't wasted.
+Before: the eBay PDF draws the label at position 1 of a 4-per-sheet A4 sheet. After: labelslot moves the same label, unscaled, to position 2, so the rest of a part-used sheet isn't wasted.
 
 ## Why this exists
 
@@ -33,7 +33,7 @@ labelslot --sheet ll04 --pos 2 label.pdf -o out.pdf
 labelslot --target 6x4 label.pdf -o out.pdf
 ```
 
-The first re-draws `label.pdf` onto position 2 of an `ll04` A4 label sheet. The second re-draws it to fill a 4x6 in thermal label (`--target` is a synonym for `--sheet`).
+The first places `label.pdf`, unscaled, onto position 2 of an `ll04` A4 label sheet. The second places it centred on a 4x6 in thermal label (`--target` is a synonym for `--sheet`).
 
 See the sheets and their ids with:
 
@@ -58,7 +58,7 @@ labelslot --sheet ll04 --pos 2 jan.pdf feb.pdf mar.pdf -o out.pdf
 | `l7168` | 199.6 x 143.5 mm | 2 (A4) | Avery L7168, Label Planet LP2/199 |
 | `6x4` | 101.6 x 152.4 mm | 1 (thermal) | 4 x 6 in thermal label |
 
-Use `--sheets file.json` to supply your own sheet definitions instead of (or as well as) these; see Contributing below for the shape.
+Use `--sheets file.json` to supply your own sheet definitions instead of these (your file replaces the bundled list); see Contributing below for the shape.
 
 ## Calibration
 
