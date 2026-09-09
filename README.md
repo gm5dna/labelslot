@@ -28,7 +28,7 @@ A desktop app is coming later.
 
 ### Web version
 
-A web version is available at [https://OWNER.github.io/labelslot/](https://OWNER.github.io/labelslot/). It runs entirely in your browser — your label PDF is never uploaded anywhere — and needs no install.
+A web version is available at [https://gm5dna.github.io/labelslot/](https://gm5dna.github.io/labelslot/). It runs entirely in your browser — your label PDF is never uploaded anywhere — and needs no install.
 
 ## Quick start (60 seconds)
 

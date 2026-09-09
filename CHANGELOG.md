@@ -8,3 +8,4 @@
 - Transform: source page embedded as a form XObject with an identity matrix and drawn by pure translation; 90 degree page rotation for single-label media; calibration page with crosshairs and mm rules at every label corner. Byte-level no-scaling proof in the test suite.
 - README, before-and-after diagram, npm release workflow.
 - Pipeline and CLI: `labelslot --sheet ID --pos N in.pdf -o out.pdf`, `--target 6x4`, `--list-sheets`, `calibrate`, `--assume-position`, `--align`, `--nudge`, `--sheets`, `--allow-scale`, `--dpi`; multi-file and multi-page input; fail-fast with the integrated-template and detection-failure messages.
+- Web version: visual position grid, drag-and-drop input, preview with label boundaries, used-position memory, nudge profiles per printer name, calibration download. Static page deployed to GitHub Pages; everything runs in the browser.
