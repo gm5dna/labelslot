@@ -65,17 +65,20 @@ const sheetSelect = el<HTMLSelectElement>('sheet-select');
 const gridSvg = el<SVGSVGElement>('grid-svg');
 const usedList = el<HTMLDivElement>('used-list');
 const resetSheetBtn = el<HTMLButtonElement>('reset-sheet');
+const positionReadout = el<HTMLSpanElement>('position-readout');
 const printerNameInput = el<HTMLInputElement>('printer-name');
 const nudgeXInput = el<HTMLInputElement>('nudge-x');
 const nudgeYInput = el<HTMLInputElement>('nudge-y');
-const dropZone = el<HTMLDivElement>('drop-zone');
+const addPdfsBtn = el<HTMLButtonElement>('add-pdfs-btn');
 const fileInput = el<HTMLInputElement>('file-input');
 const fileListEl = el<HTMLUListElement>('file-list');
+const clearFilesBtn = el<HTMLButtonElement>('clear-files-btn');
+const statusNormal = el<HTMLDivElement>('status-normal');
 const errorBox = el<HTMLDivElement>('error-box');
-const resultBox = el<HTMLDivElement>('result-box');
-const reportLines = el<HTMLPreElement>('report-lines');
+const reportLines = el<HTMLDivElement>('report-lines');
+const printingReminderEl = el<HTMLSpanElement>('printing-reminder');
 const downloadBtn = el<HTMLButtonElement>('download-btn');
-const previewSection = el<HTMLElement>('preview-section');
+const previewHint = el<HTMLDivElement>('preview-hint');
 const previewPages = el<HTMLDivElement>('preview-pages');
 
 // ---- sheet select + visual position grid ----
@@ -87,20 +90,33 @@ for (const s of BUILTIN_SHEETS) {
 }
 sheetSelect.value = currentSheet.id;
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 function renderGrid(): void {
   gridSvg.textContent = '';
   gridSvg.setAttribute('viewBox', `0 0 ${currentSheet.page.w} ${currentSheet.page.h}`);
   const count = currentSheet.cols * currentSheet.rows;
+  positionReadout.textContent = `${selectedPos} of ${count}`;
+
+  const pageRect = document.createElementNS(SVG_NS, 'rect');
+  pageRect.setAttribute('x', '0');
+  pageRect.setAttribute('y', '0');
+  pageRect.setAttribute('width', String(currentSheet.page.w));
+  pageRect.setAttribute('height', String(currentSheet.page.h));
+  pageRect.classList.add('sheet-page');
+  gridSvg.appendChild(pageRect);
+
   for (let pos = 1; pos <= count; pos++) {
     const box = labelBox(currentSheet, pos);
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    const isUsed = usedPositions.has(pos);
+    const rect = document.createElementNS(SVG_NS, 'rect');
     rect.setAttribute('x', String(box.x));
     rect.setAttribute('y', String(box.y));
     rect.setAttribute('width', String(box.w));
     rect.setAttribute('height', String(box.h));
     rect.classList.add('label-box');
     if (pos === selectedPos) rect.classList.add('selected');
-    if (usedPositions.has(pos)) rect.classList.add('used');
+    if (isUsed) rect.classList.add('used');
     rect.setAttribute('tabindex', '0');
     rect.setAttribute('role', 'button');
     rect.setAttribute('aria-label', `Position ${pos}`);
@@ -116,6 +132,27 @@ function renderGrid(): void {
       }
     });
     gridSvg.appendChild(rect);
+
+    const cx = box.x + box.w / 2;
+    const cy = box.y + box.h / 2;
+    const numFontSize = Math.min(box.w, box.h) * 0.16;
+    const numText = document.createElementNS(SVG_NS, 'text');
+    numText.setAttribute('x', String(cx));
+    numText.setAttribute('y', String(isUsed ? cy - box.h * 0.06 : cy));
+    numText.setAttribute('font-size', String(numFontSize));
+    numText.classList.add('label-box-number');
+    numText.textContent = String(pos);
+    gridSvg.appendChild(numText);
+
+    if (isUsed) {
+      const usedText = document.createElementNS(SVG_NS, 'text');
+      usedText.setAttribute('x', String(cx));
+      usedText.setAttribute('y', String(cy + box.h * 0.1));
+      usedText.setAttribute('font-size', String(numFontSize * 0.55));
+      usedText.classList.add('label-box-used-text');
+      usedText.textContent = 'used';
+      gridSvg.appendChild(usedText);
+    }
   }
 }
 
@@ -141,9 +178,16 @@ function renderUsedList(): void {
   }
 }
 
+function printingReminder(sheet: Sheet): string {
+  return sheet.cols * sheet.rows > 1
+    ? 'Print at 100% / Actual size, not fit to page.'
+    : "Turn off the driver's scale-to-fit-media option; the page is already the media size.";
+}
+
 function renderSheetUI(): void {
   renderGrid();
   renderUsedList();
+  printingReminderEl.textContent = printingReminder(currentSheet);
 }
 renderSheetUI();
 
@@ -221,27 +265,41 @@ el<HTMLButtonElement>('calibrate-btn').addEventListener('click', () => {
     .catch((err: unknown) => showError(err instanceof Error ? err.message : String(err)));
 });
 
-// ---- input: drop zone / file picker, list names + page counts ----
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault(); // Space otherwise scrolls the page
-    fileInput.click();
-  }
-});
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.classList.add('drag-over');
-});
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  if (e.dataTransfer) void addFiles(e.dataTransfer.files);
-});
+// ---- input: "Add PDFs…" button + a window-wide drop target, list names + page counts ----
+addPdfsBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => {
   if (fileInput.files) void addFiles(fileInput.files);
   fileInput.value = '';
+});
+clearFilesBtn.addEventListener('click', () => {
+  files = [];
+  renderFileList();
+});
+
+// A drag can enter/leave several elements as the pointer moves over the page, so a plain
+// dragenter/dragleave pair flickers; count nesting depth instead and only clear at zero.
+let dragDepth = 0;
+const isFileDrag = (e: DragEvent): boolean => !!e.dataTransfer?.types.includes('Files');
+window.addEventListener('dragenter', (e) => {
+  if (!isFileDrag(e)) return;
+  e.preventDefault();
+  dragDepth++;
+  document.body.classList.add('drag-over');
+});
+window.addEventListener('dragover', (e) => {
+  if (!isFileDrag(e)) return;
+  e.preventDefault();
+});
+window.addEventListener('dragleave', (e) => {
+  if (!isFileDrag(e)) return;
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) document.body.classList.remove('drag-over');
+});
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragDepth = 0;
+  document.body.classList.remove('drag-over');
+  if (e.dataTransfer) void addFiles(e.dataTransfer.files);
 });
 
 async function addFiles(fileList: FileList): Promise<void> {
@@ -274,36 +332,40 @@ function renderFileList(): void {
 function showError(message: string): void {
   errorBox.textContent = message;
   errorBox.hidden = false;
+  statusNormal.hidden = true;
 }
 function hideError(): void {
   errorBox.hidden = true;
   errorBox.textContent = '';
+  statusNormal.hidden = false;
 }
 function hideResult(): void {
-  resultBox.hidden = true;
-  previewSection.hidden = true;
+  reportLines.textContent = '';
+  downloadBtn.disabled = true;
+  downloadBtn.onclick = null;
   previewPages.textContent = '';
+  previewPages.hidden = true;
+  previewHint.hidden = false;
 }
 
-function printingReminder(sheet: Sheet): string {
-  return sheet.cols * sheet.rows > 1
-    ? 'Print at 100% / Actual size, not fit to page.'
-    : "Turn off the driver's scale-to-fit-media option; the page is already the media size.";
+function addReportLine(text: string, warn = false): void {
+  const line = document.createElement('div');
+  line.textContent = text;
+  if (warn) line.classList.add('warn-line');
+  reportLines.appendChild(line);
 }
 
 function showResult(pdf: Uint8Array, report: PageReport[], inputNames: string[], sheet: Sheet, pos: number): void {
-  const lines: string[] = [];
+  reportLines.textContent = '';
   for (const r of report) {
     const rotated = r.placement.rotate === 90 ? ' (rotated 90°)' : '';
-    lines.push(`${inputNames[r.input]} page ${r.page + 1} → page ${r.outputPage + 1} position ${r.position}${rotated}`);
+    addReportLine(`${inputNames[r.input]} page ${r.page + 1} → page ${r.outputPage + 1} position ${r.position}${rotated}`);
   }
   const warnings = new Set<string>();
   for (const r of report) for (const w of r.placement.warnings) warnings.add(w);
-  for (const w of warnings) lines.push(`Warning: ${w}`);
-  lines.push(printingReminder(sheet));
-  reportLines.textContent = lines.join('\n');
-  resultBox.hidden = false;
+  for (const w of warnings) addReportLine(`Warning: ${w}`, true);
 
+  downloadBtn.disabled = false;
   downloadBtn.onclick = () => downloadBytes(pdf, `labelslot-${sheet.id}-pos${pos}.pdf`);
 }
 
@@ -362,7 +424,8 @@ async function renderPreview(pdfBytes: Uint8Array, sheet: Sheet): Promise<void> 
   } finally {
     await loadingTask.destroy();
   }
-  previewSection.hidden = false;
+  previewHint.hidden = true;
+  previewPages.hidden = false;
 }
 
 // ---- run ----

@@ -8,86 +8,115 @@
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <header>
-    <h1>labelslot</h1>
-    <p>Move a shipping label PDF from eBay or Royal Mail Click &amp; Drop to any position on an A4 label sheet, or onto a 4x6 thermal label, without scaling it.</p>
-    <p class="privacy-line">Runs entirely in your browser. Your label is never uploaded.</p>
-  </header>
-
-  <main>
-    <section aria-labelledby="target-h">
-      <h2 id="target-h">Target</h2>
-      <label for="sheet-select">Sheet</label>
-      <select id="sheet-select"></select>
-      <div id="grid-wrap">
-        <svg id="grid-svg"></svg>
-        <div id="used-list"></div>
+  <div id="app">
+    <div class="toolbar" role="toolbar" aria-label="Target and printer">
+      <div class="tool-group">
+        <span class="tool-group-label">Target</span>
+        <label class="visually-hidden" for="sheet-select">Sheet</label>
+        <select id="sheet-select"></select>
       </div>
-      <button type="button" id="reset-sheet">Reset sheet (clear used positions)</button>
-    </section>
-
-    <section aria-labelledby="printer-h">
-      <h2 id="printer-h">Printer profile</h2>
-      <label for="printer-name">Printer name</label>
-      <input type="text" id="printer-name" placeholder="e.g. Office Brother laser" />
-      <label for="nudge-x">Nudge X (mm)</label>
-      <input type="number" id="nudge-x" step="0.1" value="0" />
-      <label for="nudge-y">Nudge Y (mm)</label>
-      <input type="number" id="nudge-y" step="0.1" value="0" />
-      <button type="button" id="calibrate-btn">Calibration page</button>
-      <p class="hint">Print the calibration page at 100%, measure the offset, and enter it above as the nudge.</p>
-    </section>
-
-    <section aria-labelledby="options-h">
-      <h2 id="options-h">Options</h2>
-      <label for="align-select">Align</label>
-      <select id="align-select">
-        <option value="centre" selected>Centre</option>
-        <option value="top-left">Top-left</option>
-      </select>
-      <label for="assume-pos">Assume position (blank = measure)</label>
-      <input type="number" id="assume-pos" min="1" step="1" />
-      <label class="checkbox-label">
-        <input type="checkbox" id="allow-scale" />
-        Allow scale (shrink to fit) &mdash; shrinking the datamatrix can push its module size below what a 203 dpi print head resolves, producing a label that looks fine and will not scan.
-      </label>
-    </section>
-
-    <section aria-labelledby="input-h">
-      <h2 id="input-h">Input</h2>
-      <div id="drop-zone" tabindex="0" role="button" aria-label="Choose or drop PDF files">
-        Drop PDF files here, or click to choose
+      <div class="tool-group">
+        <span class="tool-group-label">Position</span>
+        <span id="position-readout" class="mono readout"></span>
       </div>
-      <input type="file" id="file-input" accept="application/pdf,.pdf" multiple hidden />
-      <ul id="file-list"></ul>
-    </section>
-
-    <section aria-labelledby="run-h">
-      <h2 id="run-h">Run</h2>
-      <button type="button" id="run-btn">Make PDF</button>
-      <div id="error-box" class="error-box" hidden></div>
-      <div id="result-box" hidden>
-        <button type="button" id="download-btn">Download PDF</button>
-        <pre id="report-lines"></pre>
+      <div class="tool-group">
+        <span class="tool-group-label">Printer</span>
+        <label class="visually-hidden" for="printer-name">Printer name</label>
+        <input type="text" id="printer-name" placeholder="e.g. Office Brother laser" />
       </div>
-    </section>
+      <div class="tool-group">
+        <span class="tool-group-label">Nudge</span>
+        <span class="field">
+          <span class="field-label">X</span>
+          <input type="number" id="nudge-x" class="mono" step="0.1" value="0" />
+          <span class="unit">mm</span>
+        </span>
+        <span class="field">
+          <span class="field-label">Y</span>
+          <input type="number" id="nudge-y" class="mono" step="0.1" value="0" />
+          <span class="unit">mm</span>
+        </span>
+        <button type="button" id="calibrate-btn" class="btn">Calibration page&hellip;</button>
+      </div>
+    </div>
 
-    <section id="preview-section" aria-labelledby="preview-h" hidden>
-      <h2 id="preview-h">Preview</h2>
-      <div id="preview-pages"></div>
-      <p class="hint">Preview only. The downloaded PDF is the untouched vector output.</p>
-    </section>
-  </main>
+    <div class="toolbar" role="toolbar" aria-label="Input and output">
+      <div class="tool-group">
+        <span class="tool-group-label">Input</span>
+        <button type="button" id="add-pdfs-btn" class="btn">Add PDFs&hellip;</button>
+        <input type="file" id="file-input" accept="application/pdf,.pdf" multiple hidden />
+      </div>
+      <div class="tool-group">
+        <span class="tool-group-label">Output</span>
+        <button type="button" id="run-btn" class="btn btn-primary">Make PDF</button>
+        <button type="button" id="download-btn" class="btn" disabled>Download PDF</button>
+      </div>
+      <div class="tool-group">
+        <span class="tool-group-label">Options</span>
+        <label class="visually-hidden" for="align-select">Align</label>
+        <select id="align-select">
+          <option value="centre" selected>Centre</option>
+          <option value="top-left">Top-left</option>
+        </select>
+        <span class="field">
+          <span class="field-label">assume position</span>
+          <input type="number" id="assume-pos" class="mono" min="1" step="1" />
+        </span>
+        <label class="checkbox-label" title="Shrinking the datamatrix can push its module size below what a 203 dpi print head resolves, producing a label that looks fine and will not scan.">
+          <input type="checkbox" id="allow-scale" />
+          Allow scale (shrink to fit)
+        </label>
+        <span class="hint">May affect barcode scan quality.</span>
+      </div>
+    </div>
 
-  <footer>
-    <p>
-      <a href="https://github.com/gm5dna/labelslot#printing" target="_blank" rel="noopener">Printing</a> &middot;
-      <a href="https://github.com/gm5dna/labelslot#calibration" target="_blank" rel="noopener">Calibration</a> &middot;
-      <a href="https://github.com/gm5dna/labelslot#faq" target="_blank" rel="noopener">FAQ</a>
-    </p>
-    <p>Everything runs locally. Your label PDF is never uploaded anywhere.</p>
-    <p>labelslot is not affiliated with eBay, Royal Mail, Avery or Label Planet.</p>
-  </footer>
+    <main class="panes">
+      <section class="pane pane-sheet" aria-labelledby="sheet-h">
+        <div class="pane-header"><h2 id="sheet-h">Sheet</h2></div>
+        <div class="pane-body">
+          <svg id="grid-svg"></svg>
+          <div id="used-list"></div>
+          <button type="button" id="reset-sheet" class="btn">Reset sheet</button>
+          <div class="files-section">
+            <h3>Files</h3>
+            <ul id="file-list"></ul>
+            <button type="button" id="clear-files-btn" class="btn">Clear</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="pane pane-preview" aria-labelledby="preview-h">
+        <div class="pane-header"><h2 id="preview-h">Preview</h2></div>
+        <div class="pane-body" id="preview-body">
+          <div id="preview-hint">Add a label PDF and press Make PDF.</div>
+          <div id="preview-pages" hidden></div>
+        </div>
+        <p class="pane-caption">Preview only. The downloaded PDF is the untouched vector output.</p>
+      </section>
+    </main>
+
+    <footer class="status-bar">
+      <div id="status-normal" class="status-normal">
+        <div class="status-left">
+          <div id="report-lines" class="mono"></div>
+        </div>
+        <div class="status-right">
+          <span id="printing-reminder"></span>
+          <span class="dim">Runs locally. Nothing is uploaded.</span>
+          <details class="help-details">
+            <summary aria-label="Links and disclaimer">?</summary>
+            <div class="help-popover">
+              <a href="https://github.com/gm5dna/labelslot#printing" target="_blank" rel="noopener">Printing</a>
+              <a href="https://github.com/gm5dna/labelslot#calibration" target="_blank" rel="noopener">Calibration</a>
+              <a href="https://github.com/gm5dna/labelslot#faq" target="_blank" rel="noopener">FAQ</a>
+              <p>labelslot is not affiliated with eBay, Royal Mail, Avery or Label Planet.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+      <div id="error-box" class="status-error" hidden></div>
+    </footer>
+  </div>
 
   <script type="module" src="./dist/app.js"></script>
 </body>
