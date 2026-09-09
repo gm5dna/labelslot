@@ -24,35 +24,35 @@ export function validateSheets(json: unknown): Sheet[] {
   if (!Array.isArray(sheets)) throw new Error('sheets.json: "sheets" must be an array');
 
   sheets.forEach((raw, i) => {
-    const label = (id: unknown) => `sheet[${i}]${id ? ` (id "${id}")` : ''}`;
-    if (typeof raw !== 'object' || raw === null) throw new Error(`${label(undefined)}: must be an object`);
+    if (typeof raw !== 'object' || raw === null) throw new Error(`sheet[${i}]: must be an object`);
     const s = raw as Record<string, unknown>;
     const id = typeof s.id === 'string' ? s.id : undefined;
+    const where = `sheet[${i}]${id ? ` (id "${id}")` : ''}`;
 
-    if (typeof s.id !== 'string' || s.id === '') throw new Error(`${label(id)}: "id" must be a non-empty string`);
-    if (typeof s.name !== 'string' || s.name === '') throw new Error(`${label(id)}: "name" must be a non-empty string`);
+    if (typeof s.id !== 'string' || s.id === '') throw new Error(`${where}: "id" must be a non-empty string`);
+    if (typeof s.name !== 'string' || s.name === '') throw new Error(`${where}: "name" must be a non-empty string`);
     if (!Array.isArray(s.aliases) || !s.aliases.every((a) => typeof a === 'string')) {
-      throw new Error(`${label(id)}: "aliases" must be an array of strings`);
+      throw new Error(`${where}: "aliases" must be an array of strings`);
     }
     if (!isSize(s.page) || s.page.w <= 0 || s.page.h <= 0) {
-      throw new Error(`${label(id)}: "page" must be a {w,h} of positive finite numbers`);
+      throw new Error(`${where}: "page" must be a {w,h} of positive finite numbers`);
     }
     if (!isSize(s.label) || s.label.w <= 0 || s.label.h <= 0) {
-      throw new Error(`${label(id)}: "label" must be a {w,h} of positive finite numbers`);
+      throw new Error(`${where}: "label" must be a {w,h} of positive finite numbers`);
     }
     for (const f of POSITIVE_INT_FIELDS) {
       const v = s[f];
       if (typeof v !== 'number' || !Number.isInteger(v) || v <= 0) {
-        throw new Error(`${label(id)}: "${f}" must be a positive integer`);
+        throw new Error(`${where}: "${f}" must be a positive integer`);
       }
     }
     for (const f of NUMBER_FIELDS) {
       const v = s[f];
       if (typeof v !== 'number' || !Number.isFinite(v) || v < 0) {
-        throw new Error(`${label(id)}: "${f}" must be a non-negative finite number`);
+        throw new Error(`${where}: "${f}" must be a non-negative finite number`);
       }
     }
-    if (typeof s.source !== 'string' || s.source === '') throw new Error(`${label(id)}: "source" must be a non-empty string`);
+    if (typeof s.source !== 'string' || s.source === '') throw new Error(`${where}: "source" must be a non-empty string`);
 
     const page = s.page as { w: number; h: number };
     const lbl = s.label as { w: number; h: number };
@@ -65,7 +65,7 @@ export function validateSheets(json: unknown): Sheet[] {
     const totalW = marginLeft * 2 + cols * lbl.w + (cols - 1) * gapX;
     const totalH = marginTop * 2 + rows * lbl.h + (rows - 1) * gapY;
     if (totalW > page.w + 1e-6 || totalH > page.h + 1e-6) {
-      throw new Error(`${label(id)}: label grid (${totalW}mm x ${totalH}mm) does not fit the page (${page.w}mm x ${page.h}mm)`);
+      throw new Error(`${where}: label grid (${totalW}mm x ${totalH}mm) does not fit the page (${page.w}mm x ${page.h}mm)`);
     }
   });
 

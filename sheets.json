@@ -1,5 +1,5 @@
 {
-  "_comment": "All dimensions in mm. Positions number left-to-right, top-to-bottom, starting at 1. 'source' must cite where the margins and gaps came from (vendor template PDF). Entries marked 'TODO slice 1' hold sanity-check figures derived by dividing the leftover page evenly; slice 1 replaces them from the vendor templates and cites the source. A target with cols*rows == 1 and label == page is a single-label medium (thermal roll); rotation by 90 degrees is permitted only for those.",
+  "_comment": "All dimensions in mm. Positions number left-to-right, top-to-bottom, starting at 1. 'source' must cite where the margins and gaps came from (vendor template PDF). A target with cols*rows == 1 and label == page is a single-label medium (thermal roll); rotation by 90 degrees is permitted only for those.",
   "sheets": [
     {
       "id": "ll04",

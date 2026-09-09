@@ -103,17 +103,22 @@ function fitsWithin(w: number, h: number, targetW: number, targetH: number): boo
 
 /**
  * Detection sanity check, run before placement.
- * 'integrated': bbox area is >= 50% of the page. Almost certainly a Click & Drop integrated
- *   label + despatch note page. See INTEGRATED_MESSAGE in pipeline.ts.
+ * 'integrated': ink area >= 50 per cent of an A4 page (the source page Click & Drop and eBay
+ *   emit). Almost certainly a Click & Drop integrated label + despatch note page. See
+ *   INTEGRATED_MESSAGE in pipeline.ts.
  * 'too-large': bbox does not fit the sheet's label in either orientation. A detection
- *   failure, NOT a large label.
+ *   failure, NOT a large label. Rotation is only ever a real option when
+ *   sheet.cols * sheet.rows === 1 (place() never rotates otherwise), so the rotated
+ *   orientation is only considered here for a single-label sheet: classify must never say
+ *   'ok' for a bbox that place() would then reject.
  */
 export function classify(bbox: Box, sheet: Sheet): Classification {
   const bboxArea = bbox.w * bbox.h;
   if (bboxArea >= 0.5 * SOURCE_PAGE_AREA_MM2) return 'integrated';
 
   const fitsNormal = fitsWithin(bbox.w, bbox.h, sheet.label.w, sheet.label.h);
-  const fitsRotated = fitsWithin(bbox.w, bbox.h, sheet.label.h, sheet.label.w);
+  const canRotate = sheet.cols * sheet.rows === 1;
+  const fitsRotated = canRotate && fitsWithin(bbox.w, bbox.h, sheet.label.h, sheet.label.w);
   if (!fitsNormal && !fitsRotated) return 'too-large';
   return 'ok';
 }
@@ -140,8 +145,11 @@ export function place(bbox: Box, sheet: Sheet, pos: number, opts: PlaceOptions =
 
   if (!fitsNormal && fitsRotated) {
     rotate = 90;
-    // Transpose the target box into the drawn (swapped) page space: swap x/y and w/h.
-    effectiveTarget = { x: target.y, y: target.x, w: target.h, h: target.w };
+    // Transpose the target box into the drawn (swapped) page space. Under /Rotate 90 a
+    // displayed box (X, Y, w, h) sits in the drawn page at x' = Y, y' = sheet.page.w - X - w
+    // (not simply X: that only holds for a box centred on the margin, and breaks for
+    // asymmetric horizontal margins).
+    effectiveTarget = { x: target.y, y: sheet.page.w - target.x - target.w, w: target.h, h: target.w };
     warnings.push(ROTATE_WARNING);
   } else if (!fitsNormal && !fitsRotated) {
     if (!opts.allowScale) {
