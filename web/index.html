@@ -11,21 +11,21 @@
   <div id="app">
     <div class="toolbar" role="toolbar" aria-label="Target and printer">
       <div class="tool-group">
-        <span class="tool-group-label">Target</span>
+        <span class="eyebrow">Target</span>
         <label class="visually-hidden" for="sheet-select">Sheet</label>
         <select id="sheet-select"></select>
       </div>
       <div class="tool-group">
-        <span class="tool-group-label">Position</span>
+        <span class="eyebrow">Position</span>
         <span id="position-readout" class="mono readout"></span>
       </div>
       <div class="tool-group">
-        <span class="tool-group-label">Printer</span>
+        <span class="eyebrow">Printer</span>
         <label class="visually-hidden" for="printer-name">Printer name</label>
         <input type="text" id="printer-name" placeholder="e.g. Office Brother laser" />
       </div>
       <div class="tool-group">
-        <span class="tool-group-label">Nudge</span>
+        <span class="eyebrow">Nudge</span>
         <span class="field">
           <span class="field-label">X</span>
           <input type="number" id="nudge-x" class="mono" step="0.1" value="0" />
@@ -42,17 +42,17 @@
 
     <div class="toolbar" role="toolbar" aria-label="Input and output">
       <div class="tool-group">
-        <span class="tool-group-label">Input</span>
+        <span class="eyebrow">Input</span>
         <button type="button" id="add-pdfs-btn" class="btn">Add PDFs&hellip;</button>
         <input type="file" id="file-input" accept="application/pdf,.pdf" multiple hidden />
       </div>
       <div class="tool-group">
-        <span class="tool-group-label">Output</span>
+        <span class="eyebrow">Output</span>
         <button type="button" id="run-btn" class="btn btn-primary">Make PDF</button>
         <button type="button" id="download-btn" class="btn" disabled>Download PDF</button>
       </div>
       <div class="tool-group">
-        <span class="tool-group-label">Options</span>
+        <span class="eyebrow">Options</span>
         <label class="visually-hidden" for="align-select">Align</label>
         <select id="align-select">
           <option value="centre" selected>Centre</option>
@@ -62,31 +62,31 @@
           <span class="field-label">assume position</span>
           <input type="number" id="assume-pos" class="mono" min="1" step="1" />
         </span>
-        <label class="checkbox-label" title="Shrinking the datamatrix can push its module size below what a 203 dpi print head resolves, producing a label that looks fine and will not scan.">
+        <label class="checkbox-label">
           <input type="checkbox" id="allow-scale" />
           Allow scale (shrink to fit)
         </label>
-        <span class="hint">May affect barcode scan quality.</span>
+        <span class="hint">Shrinking the datamatrix can push its module size below what a 203&nbsp;dpi print head resolves, producing a label that looks fine and will not scan.</span>
       </div>
     </div>
 
     <main class="panes">
       <section class="pane pane-sheet" aria-labelledby="sheet-h">
-        <div class="pane-header"><h2 id="sheet-h">Sheet</h2></div>
+        <div class="pane-header"><h2 id="sheet-h" class="eyebrow">Sheet</h2></div>
         <div class="pane-body">
           <svg id="grid-svg"></svg>
           <div id="used-list"></div>
           <button type="button" id="reset-sheet" class="btn">Reset sheet</button>
-          <div class="files-section">
-            <h3>Files</h3>
-            <ul id="file-list"></ul>
-            <button type="button" id="clear-files-btn" class="btn">Clear</button>
-          </div>
+        </div>
+        <div class="files-section">
+          <h3 class="eyebrow">Files</h3>
+          <ul id="file-list"></ul>
+          <button type="button" id="clear-files-btn" class="btn">Clear</button>
         </div>
       </section>
 
       <section class="pane pane-preview" aria-labelledby="preview-h">
-        <div class="pane-header"><h2 id="preview-h">Preview</h2></div>
+        <div class="pane-header"><h2 id="preview-h" class="eyebrow">Preview</h2></div>
         <div class="pane-body" id="preview-body">
           <div id="preview-hint">Add a label PDF and press Make PDF.</div>
           <div id="preview-pages" hidden></div>

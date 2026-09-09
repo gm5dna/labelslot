@@ -296,6 +296,7 @@ window.addEventListener('dragleave', (e) => {
   if (dragDepth === 0) document.body.classList.remove('drag-over');
 });
 window.addEventListener('drop', (e) => {
+  if (!isFileDrag(e)) return; // let text dropped into an input (e.g. printer name) behave normally
   e.preventDefault();
   dragDepth = 0;
   document.body.classList.remove('drag-over');
