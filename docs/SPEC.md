@@ -43,7 +43,7 @@ Do not edit `package.json` dependencies, `test/fixtures.ts` or `CHANGELOG.md` in
 
 Each entry: `id`, `name`, `aliases`, `page {w,h}`, `cols`, `rows`, `label {w,h}`, `marginLeft`, `marginTop`, `gapX`, `gapY`, `source`. All mm. A user can supply their own file with `--sheets file.json`; it has the same shape and replaces the bundled list.
 
-`source` must cite where the margins and gaps came from (the vendor's template PDF, with URL). Entries marked `TODO slice 1` hold sanity figures derived by dividing the leftover page evenly; the geometry slice replaces them from Avery / Label Planet templates. Manufacturers work to a tolerance of a couple of mm, which is why the nudge exists.
+`source` must cite where the margins and gaps came from (the vendor's template page, with URL). Manufacturers work to a tolerance of a couple of mm, which is why the nudge exists.
 
 Seeded: `ll04` (A4, 2 × 2, 99.1 × 139 mm; Avery L7169 / Label Planet LP4/99), `lp4-105` (A4, 2 × 2, 105 × 148.5 mm, zero margins), `l7168` (A4, 1 × 2, 199.6 × 143.5 mm), `6x4` (thermal, 101.6 × 152.4 mm, one label per page, `cols × rows = 1`). Letter-size sheets only if accurate vendor numbers are sourced; otherwise leave them out.
 
