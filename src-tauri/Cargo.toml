@@ -8,8 +8,4 @@ edition = "2021"
 tauri-build = "2"
 
 [dependencies]
-tauri = { version = "2", features = [] }
-
-[[bin]]
-name = "labelslot"
-path = "src/main.rs"
+tauri = "2"

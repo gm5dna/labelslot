@@ -3,8 +3,10 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 jobs:
   publish:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -29,6 +31,7 @@ jobs:
 
   desktop:
     needs: publish
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.publish.result == 'success') }}
     permissions:
       contents: write
     strategy:
@@ -59,7 +62,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
-      - uses: tauri-apps/tauri-action@v1
+      # Signing env vars are only meaningful (and only present as secrets) on
+      # macOS; tauri-bundler treats an env var that is merely *set* (even to
+      # an empty string) as "sign with this", so on a workflow_dispatch dry
+      # run with no Apple secrets configured they must not be passed at all,
+      # not passed as empty strings. Split into two mutually-exclusive steps
+      # (a step-level `if`) rather than always setting the env block.
+      - name: Build and release (macOS, signed)
+        if: matrix.platform == 'macos-latest' && secrets.APPLE_CERTIFICATE != ''
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -69,7 +80,20 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: ${{ github.ref_name }}
-          includeUpdaterJson: false
+          tagName: ${{ github.event_name == 'push' && github.ref_name || '' }}
+          releaseName: ${{ github.event_name == 'push' && github.ref_name || '' }}
+          uploadUpdaterJson: false
+          uploadWorkflowArtifacts: ${{ github.event_name == 'workflow_dispatch' }}
+          args: ${{ matrix.args }}
+
+      - name: Build and release
+        if: '!(matrix.platform == ''macos-latest'' && secrets.APPLE_CERTIFICATE != '''')'
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event_name == 'push' && github.ref_name || '' }}
+          releaseName: ${{ github.event_name == 'push' && github.ref_name || '' }}
+          uploadUpdaterJson: false
+          uploadWorkflowArtifacts: ${{ github.event_name == 'workflow_dispatch' }}
           args: ${{ matrix.args }}

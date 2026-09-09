@@ -30,7 +30,7 @@ npm install -g labelslot
 - **Windows**: download the `-setup.exe` installer. Windows SmartScreen will warn because the build isn't code-signed: choose "More info", then "Run anyway".
 - **Linux**: download the `.AppImage` (make it executable first: `chmod +x labelslot_*.AppImage`) or the `.deb`.
 
-The desktop app is the web version wrapped in a native window; nothing leaves your computer.
+The desktop app is the web version wrapped in a native window; nothing leaves your computer. Downloads are saved to your Downloads folder; an existing file with the same name is overwritten.
 
 ### Web version
 
