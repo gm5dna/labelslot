@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="900" height="500"
+     style="background:white" font-family="Helvetica, Arial, sans-serif">
+  <!-- Solid white backdrop so the drawing reads the same in GitHub's light and dark themes. -->
+  <rect x="0" y="0" width="900" height="500" fill="white" />
+
+  <!-- Left sheet: A4 page (210x297mm at 1.2px/mm), label sheet ll04 (2x2, 99.1x139mm),
+       eBay label content occupies position 1 only. -->
+  <rect x="40" y="40" width="252" height="356.4" fill="white" stroke="#1a1a1a" stroke-width="1.5" />
+
+  <!-- Position outlines (cut lines), left sheet -->
+  <rect x="45.58" y="51.4" width="118.92" height="166.8" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4 2" />
+  <rect x="167.5" y="51.4" width="118.92" height="166.8" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4 2" />
+  <rect x="45.58" y="218.2" width="118.92" height="166.8" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4 2" />
+  <rect x="167.5" y="218.2" width="118.92" height="166.8" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4 2" />
+
+  <!-- Mock label content in position 1 (top-left), 80.2x125.2mm, centred in the label -->
+  <rect x="56.92" y="59.68" width="96.24" height="150.24" fill="white" stroke="#1a1a1a" stroke-width="1.5" />
+  <line x1="64.92" y1="75.68" x2="126.92" y2="75.68" stroke="#1a1a1a" stroke-width="3" />
+  <line x1="64.92" y1="85.68" x2="111.92" y2="85.68" stroke="#1a1a1a" stroke-width="3" />
+  <line x1="64.92" y1="95.68" x2="118.92" y2="95.68" stroke="#1a1a1a" stroke-width="3" />
+  <g fill="#1a1a1a">
+    <rect x="115.16" y="171.92" width="6" height="6" />
+    <rect x="123.16" y="171.92" width="6" height="6" />
+    <rect x="131.16" y="171.92" width="6" height="6" />
+    <rect x="139.16" y="171.92" width="6" height="6" />
+    <rect x="115.16" y="179.92" width="6" height="6" />
+    <rect x="123.16" y="179.92" width="6" height="6" />
+    <rect x="131.16" y="179.92" width="6" height="6" />
+    <rect x="139.16" y="179.92" width="6" height="6" />
+    <rect x="115.16" y="187.92" width="6" height="6" />
+    <rect x="123.16" y="187.92" width="6" height="6" />
+    <rect x="131.16" y="187.92" width="6" height="6" />
+    <rect x="139.16" y="187.92" width="6" height="6" />
+    <rect x="115.16" y="195.92" width="6" height="6" />
+    <rect x="123.16" y="195.92" width="6" height="6" />
+    <rect x="131.16" y="195.92" width="6" height="6" />
+    <rect x="139.16" y="195.92" width="6" height="6" />
+  </g>
+
+  <text x="166" y="425" text-anchor="middle" font-size="16" fill="#1a1a1a">Before: eBay PDF, position 1</text>
+
+  <!-- Arrow between the two sheets -->
+  <line x1="302" y1="218.2" x2="588" y2="218.2" stroke="#1a1a1a" stroke-width="3" />
+  <path d="M588,218.2 L574,209.2 L574,227.2 Z" fill="#1a1a1a" />
+
+  <!-- Right sheet: same page and label sheet, content moved to position 2 -->
+  <rect x="608" y="40" width="252" height="356.4" fill="white" stroke="#1a1a1a" stroke-width="1.5" />
+
+  <!-- Position outlines (cut lines), right sheet -->
+  <rect x="613.58" y="51.4" width="118.92" height="166.8" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4 2" />
+  <rect x="735.5" y="51.4" width="118.92" height="166.8" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4 2" />
+  <rect x="613.58" y="218.2" width="118.92" height="166.8" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4 2" />
+  <rect x="735.5" y="218.2" width="118.92" height="166.8" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4 2" />
+
+  <!-- Mock label content in position 2 (top-right) -->
+  <rect x="746.84" y="59.68" width="96.24" height="150.24" fill="white" stroke="#1a1a1a" stroke-width="1.5" />
+  <line x1="754.84" y1="75.68" x2="816.84" y2="75.68" stroke="#1a1a1a" stroke-width="3" />
+  <line x1="754.84" y1="85.68" x2="801.84" y2="85.68" stroke="#1a1a1a" stroke-width="3" />
+  <line x1="754.84" y1="95.68" x2="808.84" y2="95.68" stroke="#1a1a1a" stroke-width="3" />
+  <g fill="#1a1a1a">
+    <rect x="805.08" y="171.92" width="6" height="6" />
+    <rect x="813.08" y="171.92" width="6" height="6" />
+    <rect x="821.08" y="171.92" width="6" height="6" />
+    <rect x="829.08" y="171.92" width="6" height="6" />
+    <rect x="805.08" y="179.92" width="6" height="6" />
+    <rect x="813.08" y="179.92" width="6" height="6" />
+    <rect x="821.08" y="179.92" width="6" height="6" />
+    <rect x="829.08" y="179.92" width="6" height="6" />
+    <rect x="805.08" y="187.92" width="6" height="6" />
+    <rect x="813.08" y="187.92" width="6" height="6" />
+    <rect x="821.08" y="187.92" width="6" height="6" />
+    <rect x="829.08" y="187.92" width="6" height="6" />
+    <rect x="805.08" y="195.92" width="6" height="6" />
+    <rect x="813.08" y="195.92" width="6" height="6" />
+    <rect x="821.08" y="195.92" width="6" height="6" />
+    <rect x="829.08" y="195.92" width="6" height="6" />
+  </g>
+
+  <text x="734" y="425" text-anchor="middle" font-size="16" fill="#1a1a1a">After: labelslot --sheet ll04 --pos 2</text>
+</svg>
