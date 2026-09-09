@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 web/dist/
 .claude/worktrees/
 # Never commit label PDFs: they carry customers' names and addresses. Test fixtures are generated at test time.
