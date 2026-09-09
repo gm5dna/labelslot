@@ -67,7 +67,7 @@ For reference, a real eBay 2nd Class large-letter label measures 80.2 × 125.2 m
 
 - Target is `labelBox(sheet, pos)`. Centre by default; `top-left` aligns the bbox's top-left with the label's.
 - `nudge {x, y}` mm is added last: +x moves right, +y moves down.
-- If the bbox fits only when turned and `sheet.cols × sheet.rows === 1`, rotate 90. Then the output page as drawn is `sheet.page` with `w`/`h` swapped and the label box transposed; `dx`/`dy` are computed in that drawn space, and `transform.addOutputPage` sets the MediaBox to the swapped size and `/Rotate 90`. The printed page comes out in the media's orientation with the content turned. The CLI says that it rotated.
+- If the bbox fits only when turned and `sheet.cols × sheet.rows === 1`, rotate 90. Then the output page as drawn is `sheet.page` with `w`/`h` swapped, and a label box `(X, Y, w, h)` on the displayed page sits in the drawn page at `x' = Y`, `y' = page.w − X − w`, `w' = h`, `h' = w` (a rotation, not a plain transpose; identical for symmetric margins); `dx`/`dy` are computed in that drawn space, and `transform.addOutputPage` sets the MediaBox to the swapped size and `/Rotate 90`. The printed page comes out in the media's orientation with the content turned. The CLI says that it rotated.
 - If the bbox does not fit either way: throw `PlacementError` naming the measured size and the label size, unless `allowScale`, in which case `scale = min(label.w / bbox.w, label.h / bbox.h)` (uniform, shrink only), centred, with the warning from Non-negotiable 5.
 - Fit tolerance: a bbox up to 1 mm larger than the label in either dimension still counts as fitting (measurement is pixel-quantised and the border line of a label straddles its edge: the reference fixture measures 80.8 × 125.6 mm at 72 dpi for a drawn 80.2 × 125.2); anything beyond is a failure.
 
@@ -78,7 +78,7 @@ tx = pt(dx) - pt(src.x)
 ty = pt(out.h - src.h) - pt(dy) - pt(src.y)
 ```
 
-`classify(bbox, sheet)`: `integrated` when bbox area ≥ 50% of the page area; `too-large` when it fits the label in neither orientation (with the same 1 mm tolerance); else `ok`.
+`classify(bbox, sheet)`: `integrated` when bbox area ≥ 50% of an A4 page (the source page eBay and Click & Drop emit; a fixed constant, deliberately not the target sheet's page, otherwise every normal label on a 6x4 target would read as integrated, and not the source page either, otherwise a 4x6-page PDF targeted at an A4 sheet would get the Click & Drop message instead of "does not fit"); `too-large` when it does not fit the label, considering the turned orientation only for `cols × rows = 1` sheets (with the same 1 mm tolerance), so that `ok` always means `place` will succeed; else `ok`.
 
 ## Output
 
