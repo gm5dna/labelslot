@@ -9,3 +9,4 @@
 - README, before-and-after diagram, npm release workflow.
 - Pipeline and CLI: `labelslot --sheet ID --pos N in.pdf -o out.pdf`, `--target 6x4`, `--list-sheets`, `calibrate`, `--assume-position`, `--align`, `--nudge`, `--sheets`, `--allow-scale`, `--dpi`; multi-file and multi-page input; fail-fast with the integrated-template and detection-failure messages.
 - Web version: visual position grid, drag-and-drop input, preview with label boundaries, used-position memory, nudge profiles per printer name, calibration download. Static page deployed to GitHub Pages; everything runs in the browser.
+- Desktop app: the web version wrapped in Tauri; macOS signed and notarised in CI, Windows and Linux unsigned. Release workflow builds dmg, exe, AppImage and deb on a tag, with a manual dry run.
