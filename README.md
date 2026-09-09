@@ -24,7 +24,11 @@ or install it once:
 npm install -g labelslot
 ```
 
-A desktop app and a web version are coming later; for now this is the command-line tool.
+A desktop app is coming later.
+
+### Web version
+
+A web version is available at [https://OWNER.github.io/labelslot/](https://OWNER.github.io/labelslot/). It runs entirely in your browser — your label PDF is never uploaded anywhere — and needs no install.
 
 ## Quick start (60 seconds)
 

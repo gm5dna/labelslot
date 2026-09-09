@@ -19,7 +19,7 @@
   "scripts": {
     "test": "node --test 'test/**/*.test.ts'",
     "lint": "tsc --noEmit",
-    "build:web": "esbuild web/app.ts --bundle --format=esm --outdir=web/dist"
+    "build:web": "esbuild web/app.ts --bundle --format=esm --outdir=web/dist && cp node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs web/dist/"
   },
   "keywords": [
     "pdf",
