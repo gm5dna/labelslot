@@ -57,7 +57,7 @@ Return the bbox in mm relative to the MediaBox origin, plus the MediaBox itself.
 
 Refuse, with a clear message naming the page: a source page with `/Rotate ≠ 0`, or a CropBox that differs from the MediaBox. eBay and Click & Drop pages have neither; handling them is not worth the risk of a subtle offset. Check these with pdf-lib in the pipeline before measuring.
 
-For reference, a real eBay 2nd Class large-letter label measures 80.2 × 125.2 mm and sits 15.1 mm from the left edge and 16.4 mm from the top of the A4 page. `test/fixtures.ts` reproduces this as `REF_LABEL`.
+For reference, a real eBay 2nd Class large-letter label measures 80.2 × 125.2 mm and sits 15.1 mm from the left edge and 16.4 mm from the top of the A4 page. `test/fixtures.ts` reproduces this as `REF_LABEL`. A real eBay "Bulk Labels" PDF (inspected 9 Sep 2026, kept out of the repo) is pdf-lib output: page 595 × 842 pt, MediaBox = CropBox at origin, `/Rotate` absent, one content stream that draws the label as a single Form XObject, no fonts on the page. Measured at 72 dpi it gives `{x: 14.8, y: 16.2, w: 80.8, h: 125.6}`, identical to the plain fixture. Embedding it therefore nests a form inside our form XObject; pdf-lib copies the resources, and that is fine.
 
 `--assume-position N` skips measurement and uses `labelBox(sheet, N)` as the bbox. Document it as the thing to try when detection fails.
 
