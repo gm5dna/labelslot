@@ -1,0 +1,48 @@
+{
+  "name": "labelslot",
+  "version": "0.1.0",
+  "description": "Move a shipping label PDF (eBay, Royal Mail Click & Drop) to any position on an A4 label sheet or onto a 4x6 thermal label, without scaling.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "labelslot": "./src/cli.ts"
+  },
+  "files": [
+    "src",
+    "sheets.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test 'test/**/*.test.ts'",
+    "lint": "tsc --noEmit",
+    "build:web": "esbuild web/app.ts --bundle --format=esm --outdir=web/dist"
+  },
+  "keywords": [
+    "pdf",
+    "shipping-labels",
+    "royal-mail",
+    "ebay",
+    "click-and-drop",
+    "label-printing",
+    "thermal-printer",
+    "avery",
+    "a4-labels",
+    "l7169",
+    "ll04",
+    "4x6"
+  ],
+  "dependencies": {
+    "@cantoo/pdf-lib": "2.9.2",
+    "@napi-rs/canvas": "1.0.9",
+    "pdfjs-dist": "6.3.289"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.4",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}

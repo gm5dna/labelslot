@@ -1,0 +1,61 @@
+{
+  "_comment": "All dimensions in mm. Positions number left-to-right, top-to-bottom, starting at 1. 'source' must cite where the margins and gaps came from (vendor template PDF). Entries marked 'TODO slice 1' hold sanity-check figures derived by dividing the leftover page evenly; slice 1 replaces them from the vendor templates and cites the source. A target with cols*rows == 1 and label == page is a single-label medium (thermal roll); rotation by 90 degrees is permitted only for those.",
+  "sheets": [
+    {
+      "id": "ll04",
+      "name": "Label Planet LP4/99, Avery L7169 (A4, 4 per sheet, 99.1 x 139 mm)",
+      "aliases": ["lp4-99", "l7169"],
+      "page": { "w": 210, "h": 297 },
+      "cols": 2,
+      "rows": 2,
+      "label": { "w": 99.1, "h": 139 },
+      "marginLeft": 5.9,
+      "marginTop": 9.5,
+      "gapX": 0,
+      "gapY": 0,
+      "source": "TODO slice 1: sanity figures only, (210-2*99.1)/2 and (297-2*139)/2. Replace from Avery L7169 template and Label Planet LP4/99 template and cite URLs."
+    },
+    {
+      "id": "lp4-105",
+      "name": "Label Planet LP4/105 (A4, 4 per sheet, 105 x 148.5 mm, no margins)",
+      "aliases": [],
+      "page": { "w": 210, "h": 297 },
+      "cols": 2,
+      "rows": 2,
+      "label": { "w": 105, "h": 148.5 },
+      "marginLeft": 0,
+      "marginTop": 0,
+      "gapX": 0,
+      "gapY": 0,
+      "source": "TODO slice 1: zero margins by definition (A4 quartered); confirm against Label Planet LP4/105 template and cite URL."
+    },
+    {
+      "id": "l7168",
+      "name": "Avery L7168 (A4, 2 per sheet, 199.6 x 143.5 mm)",
+      "aliases": [],
+      "page": { "w": 210, "h": 297 },
+      "cols": 1,
+      "rows": 2,
+      "label": { "w": 199.6, "h": 143.5 },
+      "marginLeft": 5.2,
+      "marginTop": 5,
+      "gapX": 0,
+      "gapY": 0,
+      "source": "TODO slice 1: sanity figures only, (210-199.6)/2 and (297-2*143.5)/2. Replace from Avery L7168 template and cite URL."
+    },
+    {
+      "id": "6x4",
+      "name": "4 x 6 in thermal label (101.6 x 152.4 mm, one label per page)",
+      "aliases": ["4x6", "thermal"],
+      "page": { "w": 101.6, "h": 152.4 },
+      "cols": 1,
+      "rows": 1,
+      "label": { "w": 101.6, "h": 152.4 },
+      "marginLeft": 0,
+      "marginTop": 0,
+      "gapX": 0,
+      "gapY": 0,
+      "source": "By definition: 4 x 6 in = 101.6 x 152.4 mm = 288 x 432 pt. Media box is the whole label; no printer margin, no bleed."
+    }
+  ]
+}
