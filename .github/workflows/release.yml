@@ -45,6 +45,9 @@ jobs:
           - platform: ubuntu-22.04
             args: ''
     runs-on: ${{ matrix.platform }}
+    env:
+      # `secrets` is not available in a step `if`, so derive a flag here.
+      SIGN_MAC: ${{ matrix.platform == 'macos-latest' && secrets.APPLE_CERTIFICATE != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,7 +72,7 @@ jobs:
       # not passed as empty strings. Split into two mutually-exclusive steps
       # (a step-level `if`) rather than always setting the env block.
       - name: Build and release (macOS, signed)
-        if: matrix.platform == 'macos-latest' && secrets.APPLE_CERTIFICATE != ''
+        if: env.SIGN_MAC == 'true'
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,7 +90,7 @@ jobs:
           args: ${{ matrix.args }}
 
       - name: Build and release
-        if: '!(matrix.platform == ''macos-latest'' && secrets.APPLE_CERTIFICATE != '''')'
+        if: env.SIGN_MAC != 'true'
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
