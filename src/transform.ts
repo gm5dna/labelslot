@@ -24,39 +24,38 @@ export function addOutputPage(doc: PDFDocument, sheet: Sheet, rotate: 0 | 90): P
  * srcBox is the source page MediaBox in mm (from measure()).
  */
 export async function placePage(page: PDFPage, src: PDFDocument, pageIndex: number, placement: Placement, srcBox: Box): Promise<void> {
-  const embedded = await page.doc.embedPage(src.getPage(pageIndex));
+  // pdf-lib's default embed matrix subtracts the source MediaBox origin ([1 0 0 1 -x -y]),
+  // but geometry.pdfTranslation() already accounts for that origin itself. Force identity so
+  // the two don't both subtract it (and Non-negotiable 1 requires an identity Matrix anyway).
+  const embedded = await page.doc.embedPage(src.getPage(pageIndex), undefined, [1, 0, 0, 1, 0, 0]);
   const size = page.getSize();
   const { tx, ty } = pdfTranslation(placement, srcBox, { w: mm(size.width), h: mm(size.height) });
-  if (placement.scale === 1) {
-    page.drawPage(embedded, { x: tx, y: ty });
-  } else {
-    page.drawPage(embedded, { x: tx, y: ty, xScale: placement.scale, yScale: placement.scale });
-  }
+  page.drawPage(embedded, { x: tx, y: ty, xScale: placement.scale, yScale: placement.scale });
 }
 
 const GREY = rgb(0.6, 0.6, 0.6);
 const BLACK = rgb(0, 0, 0);
 const CROSSHAIR_MM = 10; // total hairline length, centred on the corner
-const RULE_MM = 10; // ruler span along each of the top-left corner's arms
+const RULE_MM = 10; // ruler span along each corner's two arms, into the label
 
 /**
  * A rectangle in mm, top-left origin, mapped to a PDF drawRectangle call (bottom-left anchor)
  * on a page of the given mm height.
  */
-function rectAt(page: PDFPage, box: Box, pageHeightMm: number, borderColor = GREY): void {
+function rectAt(page: PDFPage, box: Box, pageHeightMm: number): void {
   page.drawRectangle({
     x: pt(box.x),
     y: pt(pageHeightMm - (box.y + box.h)),
     width: pt(box.w),
     height: pt(box.h),
     borderWidth: 0.2,
-    borderColor,
+    borderColor: GREY,
   });
 }
 
-/** One crosshair (two 10mm hairlines) at (cx, cy) mm, top-left origin. For the top-left
- * corner of a position also draws a 0/5/10 mm rule along the two arms leading into the label. */
-function crosshair(page: PDFPage, font: PDFFont, cx: number, cy: number, pageHeightMm: number, isTopLeft: boolean, arm: { dx: 1 | -1; dy: 1 | -1 }): void {
+/** One crosshair (two 10mm hairlines) at (cx, cy) mm, top-left origin, plus a 0/5/10 mm rule
+ * along the two arms leading into the label (the direction given by `arm`). */
+function crosshair(page: PDFPage, font: PDFFont, cx: number, cy: number, pageHeightMm: number, arm: { dx: 1 | -1; dy: 1 | -1 }): void {
   const toPdf = (x: number, y: number) => ({ x: pt(x), y: pt(pageHeightMm - y) });
   const half = CROSSHAIR_MM / 2;
   const h1 = toPdf(cx - half, cy);
@@ -65,8 +64,6 @@ function crosshair(page: PDFPage, font: PDFFont, cx: number, cy: number, pageHei
   const v2 = toPdf(cx, cy + half);
   page.drawLine({ start: h1, end: h2, thickness: 0.3, color: BLACK });
   page.drawLine({ start: v1, end: v2, thickness: 0.3, color: BLACK });
-
-  if (!isTopLeft) return;
 
   // Ruler along the horizontal arm (x direction, into the label) and the vertical arm
   // (y direction, into the label). Ticks every 1mm, longer every 5mm, labelled 0/5/10.
@@ -109,13 +106,13 @@ export async function calibrationPage(sheet: Sheet): Promise<Uint8Array> {
     const box = labelBox(sheet, pos);
     rectAt(page, box, pageHeightMm);
 
-    const corners: { x: number; y: number; isTopLeft: boolean; arm: { dx: 1 | -1; dy: 1 | -1 } }[] = [
-      { x: box.x, y: box.y, isTopLeft: true, arm: { dx: 1, dy: 1 } },
-      { x: box.x + box.w, y: box.y, isTopLeft: false, arm: { dx: -1, dy: 1 } },
-      { x: box.x, y: box.y + box.h, isTopLeft: false, arm: { dx: 1, dy: -1 } },
-      { x: box.x + box.w, y: box.y + box.h, isTopLeft: false, arm: { dx: -1, dy: -1 } },
+    const corners: { x: number; y: number; arm: { dx: 1 | -1; dy: 1 | -1 } }[] = [
+      { x: box.x, y: box.y, arm: { dx: 1, dy: 1 } },
+      { x: box.x + box.w, y: box.y, arm: { dx: -1, dy: 1 } },
+      { x: box.x, y: box.y + box.h, arm: { dx: 1, dy: -1 } },
+      { x: box.x + box.w, y: box.y + box.h, arm: { dx: -1, dy: -1 } },
     ];
-    for (const c of corners) crosshair(page, font, c.x, c.y, pageHeightMm, c.isTopLeft, c.arm);
+    for (const c of corners) crosshair(page, font, c.x, c.y, pageHeightMm, c.arm);
 
     lowestY = Math.max(lowestY, box.y + box.h);
   }
