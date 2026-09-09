@@ -117,11 +117,13 @@ export async function calibrationPage(sheet: Sheet): Promise<Uint8Array> {
     lowestY = Math.max(lowestY, box.y + box.h);
   }
 
-  const noteMm = Math.min(pageHeightMm - 5, lowestY + 8);
-  const note =
-    `${sheet.id}: ${sheet.name}. Print at 100% / Actual size. Measure printed crosshair to ` +
-    'label corner; pass as --nudge X,Y (mm, +x right, +y down).';
-  page.drawText(note, { x: pt(5), y: pt(pageHeightMm - noteMm), size: 7, font, color: BLACK });
+  // Two short lines so they fit across a 4 in thermal label as well as an A4 sheet.
+  const noteMm = Math.min(pageHeightMm - 6, lowestY + 6);
+  const lines = [
+    `${sheet.id}: ${sheet.name}`,
+    'Print at 100% / Actual size. Measure crosshair to label corner; pass as --nudge=X,Y (mm, +x right, +y down).',
+  ];
+  lines.forEach((line, i) => page.drawText(line, { x: pt(15), y: pt(pageHeightMm - noteMm - i * 3), size: 5, font, color: BLACK }));
 
   return doc.save();
 }
