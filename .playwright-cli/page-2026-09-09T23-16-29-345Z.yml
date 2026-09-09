@@ -1,0 +1,92 @@
+- generic [ref=f2e2]:
+  - toolbar "Target and printer" [ref=f2e3]:
+    - generic [ref=f2e4]:
+      - generic [ref=f2e5]: Target
+      - generic [ref=f2e6]: Sheet
+      - combobox "Sheet" [ref=f2e7]:
+        - option "ll04 — Label Planet LP4/99, Avery L7169 (A4, 4 per sheet, 99.1 x 139 mm)" [selected]
+        - option "lp4-105 — Label Planet LP4/105 (A4, 4 per sheet, 105 x 148.5 mm, no margins)"
+        - option "l7168 — Avery L7168 (A4, 2 per sheet, 199.6 x 143.5 mm)"
+        - option "6x4 — 4 x 6 in thermal label (101.6 x 152.4 mm, one label per page)"
+    - generic [ref=f2e8]:
+      - generic [ref=f2e9]: Position
+      - generic [ref=f2e10]: 1 of 4
+    - generic [ref=f2e11]:
+      - generic [ref=f2e12]: Printer
+      - generic [ref=f2e13]: Printer name
+      - textbox "Printer name" [ref=f2e14]:
+        - /placeholder: e.g. Office Brother laser
+    - generic [ref=f2e15]:
+      - generic [ref=f2e16]: Nudge
+      - generic [ref=f2e17]:
+        - generic [ref=f2e18]: X
+        - spinbutton [ref=f2e19]: "0"
+        - generic [ref=f2e20]: mm
+      - generic [ref=f2e21]:
+        - generic [ref=f2e22]: "Y"
+        - spinbutton [ref=f2e23]: "0"
+        - generic [ref=f2e24]: mm
+      - button "Calibration page…" [ref=f2e25] [cursor=pointer]
+  - toolbar "Input and output" [ref=f2e26]:
+    - generic [ref=f2e27]:
+      - generic [ref=f2e28]: Input
+      - button "Add PDFs…" [ref=f2e29] [cursor=pointer]
+    - generic [ref=f2e30]:
+      - generic [ref=f2e31]: Output
+      - button "Make PDF" [ref=f2e32] [cursor=pointer]
+      - button "Download PDF" [disabled] [ref=f2e33]
+    - generic [ref=f2e34]:
+      - generic [ref=f2e35]: Options
+      - generic [ref=f2e36]: Align
+      - combobox "Align" [ref=f2e37]:
+        - option "Centre" [selected]
+        - option "Top-left"
+      - generic [ref=f2e38]:
+        - generic [ref=f2e39]: assume position
+        - spinbutton [ref=f2e40]
+      - generic "Shrinking the datamatrix can push its module size below what a 203 dpi print head resolves, producing a label that looks fine and will not scan." [ref=f2e41]:
+        - checkbox "Allow scale (shrink to fit)" [ref=f2e42]
+        - text: Allow scale (shrink to fit)
+      - generic [ref=f2e43]: May affect barcode scan quality.
+  - main [ref=f2e44]:
+    - region [ref=f2e45]:
+      - heading "Sheet" [level=2] [ref=f2e47]
+      - generic [ref=f2e48]:
+        - img [ref=f2e49]:
+          - button "Position 1" [ref=f2e51] [cursor=pointer]
+          - generic: "1"
+          - button "Position 2" [ref=f2e52] [cursor=pointer]
+          - generic: "2"
+          - generic: used
+          - button "Position 3" [ref=f2e53] [cursor=pointer]
+          - generic: "3"
+          - button "Position 4" [ref=f2e54] [cursor=pointer]
+          - generic: "4"
+        - generic [ref=f2e55]:
+          - generic [ref=f2e56]:
+            - checkbox "Position 1 used" [ref=f2e57]
+            - text: Position 1 used
+          - generic [ref=f2e58]:
+            - checkbox "Position 2 used" [checked] [ref=f2e59]
+            - text: Position 2 used
+          - generic [ref=f2e60]:
+            - checkbox "Position 3 used" [ref=f2e61]
+            - text: Position 3 used
+          - generic [ref=f2e62]:
+            - checkbox "Position 4 used" [ref=f2e63]
+            - text: Position 4 used
+        - button "Reset sheet" [ref=f2e64] [cursor=pointer]
+        - generic [ref=f2e65]:
+          - heading "Files" [level=3] [ref=f2e66]
+          - list
+          - button "Clear" [ref=f2e67] [cursor=pointer]
+    - region [ref=f2e68]:
+      - heading "Preview" [level=2] [ref=f2e70]
+      - generic [ref=f2e71]: Add a label PDF and press Make PDF.
+      - paragraph [ref=f2e73]: Preview only. The downloaded PDF is the untouched vector output.
+  - contentinfo [ref=f2e74]:
+    - generic [ref=f2e76]:
+      - generic [ref=f2e77]: Print at 100% / Actual size, not fit to page.
+      - generic [ref=f2e78]: Runs locally. Nothing is uploaded.
+      - group [ref=f2e79]:
+        - generic "Links and disclaimer" [ref=f2e80] [cursor=pointer]: "?"

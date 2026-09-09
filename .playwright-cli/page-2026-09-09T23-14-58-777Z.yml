@@ -1,0 +1,72 @@
+- generic [ref=f1e2]:
+  - toolbar "Target and printer" [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e5]: Target
+      - generic [ref=f1e6]: Sheet
+      - combobox "Sheet" [ref=f1e7]:
+        - option "ll04 — Label Planet LP4/99, Avery L7169 (A4, 4 per sheet, 99.1 x 139 mm)"
+        - option "lp4-105 — Label Planet LP4/105 (A4, 4 per sheet, 105 x 148.5 mm, no margins)"
+        - option "l7168 — Avery L7168 (A4, 2 per sheet, 199.6 x 143.5 mm)"
+        - option "6x4 — 4 x 6 in thermal label (101.6 x 152.4 mm, one label per page)" [selected]
+    - generic [ref=f1e8]:
+      - generic [ref=f1e9]: Position
+      - generic [ref=f1e10]: 1 of 1
+    - generic [ref=f1e11]:
+      - generic [ref=f1e12]: Printer
+      - generic [ref=f1e13]: Printer name
+      - textbox "Printer name" [ref=f1e14]:
+        - /placeholder: e.g. Office Brother laser
+    - generic [ref=f1e15]:
+      - generic [ref=f1e16]: Nudge
+      - generic [ref=f1e17]:
+        - generic [ref=f1e18]: X
+        - spinbutton [ref=f1e19]: "0"
+        - generic [ref=f1e20]: mm
+      - generic [ref=f1e21]:
+        - generic [ref=f1e22]: "Y"
+        - spinbutton [ref=f1e23]: "0"
+        - generic [ref=f1e24]: mm
+      - button "Calibration page…" [ref=f1e25] [cursor=pointer]
+  - toolbar "Input and output" [ref=f1e26]:
+    - generic [ref=f1e27]:
+      - generic [ref=f1e28]: Input
+      - button "Add PDFs…" [ref=f1e29] [cursor=pointer]
+    - generic [ref=f1e30]:
+      - generic [ref=f1e31]: Output
+      - button "Make PDF" [active] [ref=f1e32] [cursor=pointer]
+      - button "Download PDF" [ref=f1e33] [cursor=pointer]
+    - generic [ref=f1e34]:
+      - generic [ref=f1e35]: Options
+      - generic [ref=f1e36]: Align
+      - combobox "Align" [ref=f1e37]:
+        - option "Centre" [selected]
+        - option "Top-left"
+      - generic [ref=f1e38]:
+        - generic [ref=f1e39]: assume position
+        - spinbutton [ref=f1e40]
+      - generic "Shrinking the datamatrix can push its module size below what a 203 dpi print head resolves, producing a label that looks fine and will not scan." [ref=f1e41]:
+        - checkbox "Allow scale (shrink to fit)" [ref=f1e42]
+        - text: Allow scale (shrink to fit)
+      - generic [ref=f1e43]: May affect barcode scan quality.
+  - main [ref=f1e44]:
+    - region [ref=f1e45]:
+      - heading "Sheet" [level=2] [ref=f1e47]
+      - generic [ref=f1e48]:
+        - img [ref=f1e49]:
+          - button "Position 1" [ref=f1e113] [cursor=pointer]
+          - generic: "1"
+        - generic [ref=f1e65]:
+          - heading "Files" [level=3] [ref=f1e66]
+          - list
+          - button "Clear" [ref=f1e67] [cursor=pointer]
+    - region [ref=f1e68]:
+      - heading "Preview" [level=2] [ref=f1e70]
+      - paragraph [ref=f1e73]: Preview only. The downloaded PDF is the untouched vector output.
+  - contentinfo [ref=f1e74]:
+    - generic [ref=f1e75]:
+      - generic [ref=f1e109]: label.pdf page 1 → page 1 position 1
+      - generic [ref=f1e76]:
+        - generic [ref=f1e77]: Turn off the driver's scale-to-fit-media option; the page is already the media size.
+        - generic [ref=f1e78]: Runs locally. Nothing is uploaded.
+        - group [ref=f1e79]:
+          - generic "Links and disclaimer" [ref=f1e80] [cursor=pointer]: "?"
