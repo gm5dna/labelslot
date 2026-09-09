@@ -1,4 +1,4 @@
-// labelslot web UI. Plain DOM, no framework. Browser-only entry point (may import node:* nothing).
+// labelslot web UI. Plain DOM, no framework. Browser-only entry point (no node: imports).
 // pdf.js needs a worker in the browser; set its URL before the first pipeline run() call.
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 GlobalWorkerOptions.workerSrc = new URL('./pdf.worker.min.mjs', import.meta.url).href;
@@ -6,8 +6,9 @@ GlobalWorkerOptions.workerSrc = new URL('./pdf.worker.min.mjs', import.meta.url)
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { labelBox, type Align, type Sheet } from '../src/geometry.ts';
 import { BUILTIN_SHEETS, findSheet } from '../src/sheets.ts';
-import { run, LabelslotError, type PageReport } from '../src/pipeline.ts';
+import { run, type PageReport } from '../src/pipeline.ts';
 import { calibrationPage } from '../src/transform.ts';
+import { nextUsed, firstUnused } from './used.ts';
 
 function el<T extends Element = HTMLElement>(id: string): T {
   const e = document.getElementById(id);
@@ -49,16 +50,12 @@ function loadUsed(sheetId: string): UsedSet {
 function saveUsed(sheetId: string, used: UsedSet): void {
   storageSet(usedKey(sheetId), JSON.stringify([...used]));
 }
-function firstUnused(sheet: Sheet, used: UsedSet): number {
-  const count = sheet.cols * sheet.rows;
-  for (let pos = 1; pos <= count; pos++) if (!used.has(pos)) return pos;
-  return 1;
-}
+const sheetCount = (sheet: Sheet): number => sheet.cols * sheet.rows;
 
 // ---- state ----
 let currentSheet: Sheet = BUILTIN_SHEETS[0];
 let usedPositions: UsedSet = loadUsed(currentSheet.id);
-let selectedPos = firstUnused(currentSheet, usedPositions);
+let selectedPos = firstUnused(usedPositions, sheetCount(currentSheet));
 
 type FileEntry = { name: string; bytes: Uint8Array; pages: number };
 let files: FileEntry[] = [];
@@ -67,6 +64,7 @@ let files: FileEntry[] = [];
 const sheetSelect = el<HTMLSelectElement>('sheet-select');
 const gridSvg = el<SVGSVGElement>('grid-svg');
 const usedList = el<HTMLDivElement>('used-list');
+const resetSheetBtn = el<HTMLButtonElement>('reset-sheet');
 const printerNameInput = el<HTMLInputElement>('printer-name');
 const nudgeXInput = el<HTMLInputElement>('nudge-x');
 const nudgeYInput = el<HTMLInputElement>('nudge-y');
@@ -103,17 +101,29 @@ function renderGrid(): void {
     rect.classList.add('label-box');
     if (pos === selectedPos) rect.classList.add('selected');
     if (usedPositions.has(pos)) rect.classList.add('used');
-    rect.addEventListener('click', () => {
+    rect.setAttribute('tabindex', '0');
+    rect.setAttribute('role', 'button');
+    rect.setAttribute('aria-label', `Position ${pos}`);
+    const select = (): void => {
       selectedPos = pos;
       renderGrid();
+    };
+    rect.addEventListener('click', select);
+    rect.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        select();
+      }
     });
     gridSvg.appendChild(rect);
   }
 }
 
 function renderUsedList(): void {
-  usedList.textContent = '';
   const count = currentSheet.cols * currentSheet.rows;
+  usedList.hidden = count === 1;
+  resetSheetBtn.hidden = count === 1;
+  usedList.textContent = '';
   for (let pos = 1; pos <= count; pos++) {
     const label = document.createElement('label');
     const cb = document.createElement('input');
@@ -140,14 +150,14 @@ renderSheetUI();
 sheetSelect.addEventListener('change', () => {
   currentSheet = findSheet(sheetSelect.value);
   usedPositions = loadUsed(currentSheet.id);
-  selectedPos = firstUnused(currentSheet, usedPositions);
+  selectedPos = firstUnused(usedPositions, sheetCount(currentSheet));
   renderSheetUI();
 });
 
-el<HTMLButtonElement>('reset-sheet').addEventListener('click', () => {
+resetSheetBtn.addEventListener('click', () => {
   usedPositions = new Set();
   saveUsed(currentSheet.id, usedPositions);
-  selectedPos = firstUnused(currentSheet, usedPositions);
+  selectedPos = firstUnused(usedPositions, sheetCount(currentSheet));
   renderSheetUI();
 });
 
@@ -214,7 +224,10 @@ el<HTMLButtonElement>('calibrate-btn').addEventListener('click', () => {
 // ---- input: drop zone / file picker, list names + page counts ----
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') fileInput.click();
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault(); // Space otherwise scrolls the page
+    fileInput.click();
+  }
 });
 dropZone.addEventListener('dragover', (e) => {
   e.preventDefault();
@@ -233,7 +246,10 @@ fileInput.addEventListener('change', () => {
 
 async function addFiles(fileList: FileList): Promise<void> {
   for (const file of Array.from(fileList)) {
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) continue;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      showError(`${file.name}: not a PDF, skipped.`);
+      continue;
+    }
     const bytes = new Uint8Array(await file.arrayBuffer());
     try {
       const doc = await PDFDocument.load(bytes.slice());
@@ -292,10 +308,11 @@ function showResult(pdf: Uint8Array, report: PageReport[], inputNames: string[],
 }
 
 function markUsed(report: PageReport[]): void {
-  if (currentSheet.cols * currentSheet.rows === 1) return; // no "used" concept for single-label media
-  for (const r of report) usedPositions.add(r.position);
+  const count = sheetCount(currentSheet);
+  if (count === 1) return; // no "used" concept for single-label media
+  usedPositions = nextUsed(report, count);
   saveUsed(currentSheet.id, usedPositions);
-  selectedPos = firstUnused(currentSheet, usedPositions);
+  selectedPos = firstUnused(usedPositions, count);
   renderSheetUI();
 }
 
@@ -383,8 +400,9 @@ async function doRun(): Promise<void> {
     showResult(pdf, report, files.map((f) => f.name), currentSheet, pos);
     markUsed(report);
     await renderPreview(pdf, currentSheet);
+    files = [];
+    renderFileList();
   } catch (err) {
-    if (err instanceof LabelslotError) showError(err.message);
-    else showError(err instanceof Error ? err.message : String(err));
+    showError(err instanceof Error ? err.message : String(err));
   }
 }
