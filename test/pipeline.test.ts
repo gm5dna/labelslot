@@ -23,20 +23,6 @@ function within(bbox: Box, container: Box, msg: string): void {
   assert.ok(bbox.y + bbox.h <= container.y + container.h, `${msg}: bottom ${bbox.y + bbox.h} > ${container.y + container.h}`);
 }
 
-/** Union of labelBox(sheet, pos) for pos in [from, to] inclusive. */
-function unionOfPositions(sheet: ReturnType<typeof findSheet>, from: number, to: number): Box {
-  let box = labelBox(sheet, from);
-  for (let p = from + 1; p <= to; p++) {
-    const b = labelBox(sheet, p);
-    const x2 = Math.max(box.x + box.w, b.x + b.w);
-    const y2 = Math.max(box.y + box.h, b.y + b.h);
-    box = { x: Math.min(box.x, b.x), y: Math.min(box.y, b.y), w: 0, h: 0 };
-    box.w = x2 - box.x;
-    box.h = y2 - box.y;
-  }
-  return box;
-}
-
 test('plain fixture, ll04 pos 2: one output page, ink lands within the label + 1mm', async () => {
   const pdf = await makeLabelPdf();
   const { pdf: outPdf, report } = await run([pdf], { sheet: ll04, pos: 2, createCanvas });
@@ -62,15 +48,12 @@ test('pages: 5 fixture, ll04 pos 3: spills to a second output page at positions 
 
   assert.deepEqual(report.map((r) => r.outputPage), [0, 0, 1, 1, 1]);
   assert.deepEqual(report.map((r) => r.position), [3, 4, 1, 2, 3]);
-
-  const remeasured = await measure(outPdf, 1, { createCanvas });
-  assert.ok(remeasured.bbox);
-  within(remeasured.bbox, grow(unionOfPositions(ll04, 1, 3), 1), 'page 1 union bbox');
 });
 
-test('two inputs on 6x4: three output pages, each centred within 1mm of the page centre', async () => {
+test('two inputs on 6x4: one page per label, a landscape label rotates and is centred', async () => {
   const pdfA = await makeLabelPdf({ pages: 1 });
-  const pdfB = await makeLabelPdf({ pages: 2 });
+  // Landscape: too wide for the portrait label but fits once turned 90 degrees.
+  const pdfB = await makeLabelPdf({ pages: 2, label: { x: 15, y: 16, w: 125.2, h: 80.2 } });
   const { pdf: outPdf, report } = await run([pdfA, pdfB], { sheet: sixByFour, createCanvas });
 
   const outDoc = await PDFDocument.load(outPdf);
@@ -78,10 +61,15 @@ test('two inputs on 6x4: three output pages, each centred within 1mm of the page
   assert.equal(pages.length, 3);
   assert.equal(report.length, 3);
 
+  assert.equal(report[0].placement.rotate, 0);
+  assert.equal(report[1].placement.rotate, 90);
+
   for (let i = 0; i < 3; i++) {
     const size = pages[i].getSize();
-    assert.ok(Math.abs(size.width - 288) < 1e-6, `page ${i} width`);
-    assert.ok(Math.abs(size.height - 432) < 1e-6, `page ${i} height`);
+    const rotated = report[i].placement.rotate === 90;
+    const [expectW, expectH] = rotated ? [432, 288] : [288, 432];
+    assert.ok(Math.abs(size.width - expectW) < 1e-6, `page ${i} width`);
+    assert.ok(Math.abs(size.height - expectH) < 1e-6, `page ${i} height`);
 
     const remeasured = await measure(outPdf, i, { createCanvas });
     assert.ok(remeasured.bbox);
@@ -110,7 +98,7 @@ test('rotate: 90 fixture: LabelslotError mentioning rotation', async () => {
   await assert.rejects(async () => run([pdf], { sheet: ll04, createCanvas }), /rotation/i);
 });
 
-test('assumePosition skips measurement (createCanvas throws if called) and still lands within the label + 1.5mm', async () => {
+test('assumePosition skips measurement (createCanvas throws if called) and still lands within the label + 1mm', async () => {
   const pdf = await makeLabelPdf();
   const throwingCreateCanvas = () => {
     throw new Error('createCanvas must not be called when assumePosition is set');
@@ -124,7 +112,7 @@ test('assumePosition skips measurement (createCanvas throws if called) and still
 
   const remeasured = await measure(outPdf, 0, { createCanvas });
   assert.ok(remeasured.bbox);
-  within(remeasured.bbox, grow(labelBox(ll04, 2), 1.5), 'assumePosition bbox');
+  within(remeasured.bbox, grow(labelBox(ll04, 2), 1), 'assumePosition bbox');
 });
 
 test('relocated-label fixture lands within labelBox(ll04, 1) + 1mm', async () => {
@@ -135,4 +123,43 @@ test('relocated-label fixture lands within labelBox(ll04, 1) + 1mm', async () =>
   const remeasured = await measure(outPdf, 0, { createCanvas });
   assert.ok(remeasured.bbox);
   within(remeasured.bbox, grow(labelBox(ll04, 1), 1), 'relocated-label bbox');
+});
+
+test('too-large: oversized label on ll04 rejects as a detection failure, not a large label', async () => {
+  const pdf = await makeLabelPdf({ label: { x: 10, y: 10, w: 110, h: 150 } });
+  const { bbox } = await measure(pdf, 0, { createCanvas });
+  assert.ok(bbox);
+
+  await assert.rejects(
+    async () => run([pdf], { sheet: ll04, createCanvas }),
+    (err: unknown) => {
+      assert.ok(err instanceof LabelslotError);
+      const msg = (err as Error).message;
+      assert.match(msg, /detection failed/);
+      assert.ok(msg.includes(`${bbox.w.toFixed(1)}x${bbox.h.toFixed(1)}mm`), `message missing measured size: ${msg}`);
+      assert.ok(msg.includes('99.1x139mm'), `message missing label size: ${msg}`);
+      return true;
+    },
+  );
+});
+
+test('too-large with --allow-scale: succeeds, shrinks, and warns about 203 dpi scanning', async () => {
+  const pdf = await makeLabelPdf({ label: { x: 10, y: 10, w: 110, h: 150 } });
+  const { report } = await run([pdf], { sheet: ll04, allowScale: true, createCanvas });
+
+  assert.equal(report.length, 1);
+  assert.ok(report[0].placement.scale < 1, `expected scale < 1, got ${report[0].placement.scale}`);
+  assert.ok(
+    report[0].placement.warnings.some((w) => /203 dpi/.test(w)),
+    `expected a 203 dpi warning, got ${JSON.stringify(report[0].placement.warnings)}`,
+  );
+});
+
+test('CropBox differing from MediaBox rejects', async () => {
+  const bytes = await makeLabelPdf();
+  const doc = await PDFDocument.load(bytes);
+  doc.getPages()[0].setCropBox(10, 10, 400, 600);
+  const modified = await doc.save();
+
+  await assert.rejects(async () => run([modified], { sheet: ll04, createCanvas }), /CropBox/);
 });

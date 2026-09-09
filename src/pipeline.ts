@@ -1,6 +1,6 @@
 // Bytes in, bytes out. Every page of every input is a label. Browser-safe: no node: imports,
 // no paths. The CLI and the web UI both call run().
-import { PDFDocument } from '@cantoo/pdf-lib';
+import { PDFDocument, type PDFPage } from '@cantoo/pdf-lib';
 import { classify, labelBox, mm, place, PlacementError, type Align, type Box, type Placement, type Sheet } from './geometry.ts';
 import { measure, type CreateCanvas } from './measure.ts';
 import { addOutputPage, placePage } from './transform.ts';
@@ -52,8 +52,7 @@ export async function run(inputs: Uint8Array[], opts: RunOptions): Promise<{ pdf
 
   let pos = opts.pos ?? 1;
   let outputPageIndex = -1;
-  let currentPage: ReturnType<typeof addOutputPage> | undefined;
-  let currentRotate: 0 | 90 = 0;
+  let currentPage: PDFPage | undefined;
 
   for (let inputIndex = 0; inputIndex < inputs.length; inputIndex++) {
     const bytes = inputs[inputIndex];
@@ -76,7 +75,9 @@ export async function run(inputs: Uint8Array[], opts: RunOptions): Promise<{ pdf
         Math.abs(mediaBox.width - cropBox.width) > CROP_BOX_TOLERANCE_PT ||
         Math.abs(mediaBox.height - cropBox.height) > CROP_BOX_TOLERANCE_PT
       ) {
-        throw new LabelslotError(`${prefix}: CropBox differs from MediaBox by more than ${CROP_BOX_TOLERANCE_PT}pt`);
+        throw new LabelslotError(
+          `${prefix}: CropBox differs from MediaBox; only pages whose CropBox equals the MediaBox are supported`,
+        );
       }
 
       let bbox: Box | null;
@@ -97,7 +98,7 @@ export async function run(inputs: Uint8Array[], opts: RunOptions): Promise<{ pdf
           `${prefix}: ${INTEGRATED_MESSAGE} (measured ${bbox.w.toFixed(1)}x${bbox.h.toFixed(1)}mm)`,
         );
       }
-      if (classification === 'too-large') {
+      if (classification === 'too-large' && !opts.allowScale) {
         throw new LabelslotError(
           `${prefix}: detection failed - measured ink ${bbox.w.toFixed(1)}x${bbox.h.toFixed(1)}mm does not fit ` +
             `label ${sheet.label.w}x${sheet.label.h}mm on sheet "${sheet.id}". This means detection likely ` +
@@ -120,11 +121,9 @@ export async function run(inputs: Uint8Array[], opts: RunOptions): Promise<{ pdf
         throw err;
       }
 
-      if (!needNewPage && placement.rotate !== currentRotate) needNewPage = true;
       if (needNewPage) {
         currentPage = addOutputPage(outDoc, sheet, placement.rotate);
         outputPageIndex++;
-        currentRotate = placement.rotate;
       }
 
       await placePage(currentPage!, srcDoc, pageIndex, placement, srcBox);

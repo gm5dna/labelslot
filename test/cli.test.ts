@@ -84,6 +84,56 @@ test('unknown sheet exits 1 with the known ids in stderr', async () => {
   assert.match(stderr, /ll04/);
 });
 
+test('--nudge with a negative value passed as two argv tokens is accepted', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'labelslot-cli-'));
+  const inPath = join(dir, 'in.pdf');
+  const outPath = join(dir, 'out.pdf');
+  await writeFile(inPath, await makeLabelPdf());
+
+  const { code, stderr } = await runMain(['--sheet', 'll04', '--nudge', '-1,-1', inPath, '-o', outPath]);
+  assert.equal(code, 0, stderr);
+});
+
+test('--sheets file.json replaces the bundled list', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'labelslot-cli-'));
+  const sheetsPath = join(dir, 'sheets.json');
+  const custom = {
+    sheets: [
+      {
+        id: 'custom1',
+        name: 'Custom test sheet',
+        aliases: [],
+        page: { w: 210, h: 297 },
+        cols: 1,
+        rows: 1,
+        label: { w: 210, h: 297 },
+        marginLeft: 0,
+        marginTop: 0,
+        gapX: 0,
+        gapY: 0,
+        source: 'test fixture',
+      },
+    ],
+  };
+  await writeFile(sheetsPath, JSON.stringify(custom));
+
+  const { code: listCode, stdout } = await runMain(['--sheets', sheetsPath, '--list-sheets']);
+  assert.equal(listCode, 0);
+  assert.match(stdout, /custom1/);
+  assert.doesNotMatch(stdout, /ll04/);
+
+  const inPath = join(dir, 'in.pdf');
+  const outPath = join(dir, 'out.pdf');
+  await writeFile(inPath, await makeLabelPdf());
+
+  const { code: okCode, stderr: okStderr } = await runMain(['--sheets', sheetsPath, '--sheet', 'custom1', inPath, '-o', outPath]);
+  assert.equal(okCode, 0, okStderr);
+
+  const { code: badCode, stderr: badStderr } = await runMain(['--sheets', sheetsPath, '--sheet', 'll04', inPath, '-o', outPath]);
+  assert.equal(badCode, 1);
+  assert.match(badStderr, /Unknown sheet/);
+});
+
 test('output path equal to input exits 1 and leaves the input untouched', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'labelslot-cli-'));
   const inPath = join(dir, 'in.pdf');

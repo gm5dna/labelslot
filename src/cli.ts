@@ -8,7 +8,9 @@
 // Options: --pos N (default 1), --assume-position N, --align centre|top-left, --nudge X,Y (mm),
 //          --sheets file.json, --allow-scale, --dpi N, -o/--output FILE, --list-sheets, -h/--help
 import { readFile, writeFile } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createCanvas } from '@napi-rs/canvas';
 import type { Align } from './geometry.ts';
@@ -58,13 +60,17 @@ const OPTIONS = {
   help: { type: 'boolean', short: 'h' },
 } as const;
 
+/** Parse a numeric option value, throwing a clear error (rather than silently NaN) on garbage. */
+function num(flag: string, s: string): number {
+  const n = Number(s);
+  if (!Number.isFinite(n)) throw new Error(`${flag} must be a number, got "${s}"`);
+  return n;
+}
+
 function parseNudge(s: string): { x: number; y: number } {
   const parts = s.split(',');
-  const [x, y] = parts.map(Number);
-  if (parts.length !== 2 || !Number.isFinite(x) || !Number.isFinite(y)) {
-    throw new Error(`--nudge must be "X,Y" in mm, got "${s}"`);
-  }
-  return { x, y };
+  if (parts.length !== 2) throw new Error(`--nudge must be "X,Y" in mm, got "${s}"`);
+  return { x: num('--nudge', parts[0]), y: num('--nudge', parts[1]) };
 }
 
 function parseAlign(s: string | undefined): Align | undefined {
@@ -100,6 +106,15 @@ export async function main(argv: string[]): Promise<number> {
     if (rest[0] === 'calibrate') {
       isCalibrate = true;
       rest = rest.slice(1);
+    }
+
+    // parseArgs rejects a value starting with "-" (e.g. "-1,-1") as if it were another
+    // option. --nudge X,Y is the only option whose value can start with "-", so rewrite the
+    // two-token form into --nudge=X,Y before parsing; the = form already works untouched.
+    rest = [...rest];
+    const nudgeIndex = rest.indexOf('--nudge');
+    if (nudgeIndex !== -1 && nudgeIndex + 1 < rest.length) {
+      rest.splice(nudgeIndex, 2, `--nudge=${rest[nudgeIndex + 1]}`);
     }
 
     const { values, positionals } = parseArgs({ args: rest, options: OPTIONS, allowPositionals: true });
@@ -138,12 +153,13 @@ export async function main(argv: string[]): Promise<number> {
 
     const opts: RunOptions = {
       sheet,
-      pos: values.pos !== undefined ? Number(values.pos) : undefined,
+      pos: values.pos !== undefined ? num('--pos', values.pos) : undefined,
       align: parseAlign(values.align),
       nudge: values.nudge !== undefined ? parseNudge(values.nudge) : undefined,
       allowScale: !!values['allow-scale'],
-      assumePosition: values['assume-position'] !== undefined ? Number(values['assume-position']) : undefined,
-      dpi: values.dpi !== undefined ? Number(values.dpi) : undefined,
+      assumePosition:
+        values['assume-position'] !== undefined ? num('--assume-position', values['assume-position']) : undefined,
+      dpi: values.dpi !== undefined ? num('--dpi', values.dpi) : undefined,
       createCanvas,
     };
 
@@ -154,7 +170,7 @@ export async function main(argv: string[]): Promise<number> {
     for (const r of report) {
       const inputName = basename(inputPaths[r.input]);
       const rotated = r.placement.rotate === 90 ? ' (rotated 90°)' : '';
-      process.stdout.write(`${inputName} page ${r.page + 1} → sheet ${r.outputPage + 1} position ${r.position}${rotated}\n`);
+      process.stdout.write(`${inputName} page ${r.page + 1} → page ${r.outputPage + 1} position ${r.position}${rotated}\n`);
     }
     const warnings = new Set<string>();
     for (const r of report) for (const w of r.placement.warnings) warnings.add(w);
@@ -170,6 +186,6 @@ export async function main(argv: string[]): Promise<number> {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   process.exitCode = await main(process.argv.slice(2));
 }
