@@ -141,7 +141,31 @@ test('no-scaling proof: XObject is Subtype Form, Matrix identity, BBox = source 
 
 // Golden bbox check (belt and braces, not the proof that matters - see the test above).
 // measure() is not implemented on this branch (another slice implements it in parallel).
-test.skip('golden bbox: enabled by the integrator once measure() is merged', () => {});
+// Golden test: belt and braces alongside the byte-level proof above. Re-measures the output
+// with the real measurement code and checks the ink lies inside the target label. Includes the
+// offset-MediaBox source, which is the case pdf-lib's default embed matrix got wrong.
+for (const mediaBoxOffset of [{ x: 0, y: 0 }, { x: 10, y: 20 }]) {
+  test(`golden bbox: placed ink lies within labelBox(ll04, 2) (MediaBox origin ${mediaBoxOffset.x},${mediaBoxOffset.y})`, async () => {
+    const { measure } = await import('../src/measure.ts');
+    const { createCanvas } = await import('@napi-rs/canvas');
+    const srcBytes = await makeLabelPdf({ mediaBoxOffset });
+    const measured = await measure(srcBytes, 0, { createCanvas });
+    assert.ok(measured.bbox);
+    const out = await PDFDocument.create();
+    const page = addOutputPage(out, ll04, 0);
+    const placement = place(measured.bbox, ll04, 2);
+    await placePage(page, await PDFDocument.load(srcBytes), 0, placement, measured.page);
+    const result = await measure(await out.save(), 0, { createCanvas });
+    assert.ok(result.bbox);
+    const target = labelBox(ll04, 2);
+    const got = result.bbox;
+    assert.ok(got.x >= target.x - 1 && got.y >= target.y - 1, `top-left ${got.x},${got.y} outside ${target.x},${target.y}`);
+    assert.ok(got.x + got.w <= target.x + target.w + 1 && got.y + got.h <= target.y + target.h + 1, 'bottom-right outside label');
+    // Centred: the placed ink's centre is within one pixel (0.35 mm) of the label's centre.
+    assert.ok(Math.abs(got.x + got.w / 2 - (target.x + target.w / 2)) < 0.5, 'not centred horizontally');
+    assert.ok(Math.abs(got.y + got.h / 2 - (target.y + target.h / 2)) < 0.5, 'not centred vertically');
+  });
+}
 
 test('MediaBox offset: cm translation and BBox account for the source MediaBox origin', async () => {
   const srcBytes = await makeLabelPdf({ mediaBoxOffset: { x: 10, y: 20 } });
