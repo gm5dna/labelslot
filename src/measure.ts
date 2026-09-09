@@ -3,16 +3,13 @@
 // reaches the output. Browser-safe: the caller supplies createCanvas (DOM or @napi-rs/canvas).
 //
 // Import note: the legacy build (pdfjs-dist/legacy/build/pdf.mjs) works both under Node's test
-// runner and when bundled for the browser by esbuild, so it is used for both. No worker is
-// configured: pdf.js may warn about a missing worker in this environment, which is harmless —
-// it just means parsing/rendering runs on the calling thread instead of a Worker.
+// runner and when bundled for the browser by esbuild, so it is used for both. Node needs no
+// worker; the web build must set GlobalWorkerOptions.workerSrc before calling measure().
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { mm, type Box } from './geometry.ts';
 
-/** Minimal 2d context surface this module needs: fill a background and read pixels back. */
+/** Minimal 2d context surface this module needs: read the rendered pixels back. */
 export type Canvas2DContext = {
-  fillStyle: unknown;
-  fillRect(x: number, y: number, w: number, h: number): void;
   getImageData(x: number, y: number, w: number, h: number): { data: Uint8ClampedArray };
 };
 /** Minimal canvas surface pdf.js can render into and we can read pixels from. */
@@ -41,11 +38,14 @@ export type Measured = {
 /** Render page `pageIndex` (0-based) of `pdf` with rotation 0 and return the ink bounds. */
 export async function measure(pdf: Uint8Array, pageIndex: number, opts: MeasureOptions): Promise<Measured> {
   const { createCanvas, dpi = 72, threshold = 250 } = opts;
-  // pdf.js may detach/transfer the passed buffer; give it its own copy so the caller's bytes survive.
-  const data = pdf.slice();
+  // new Uint8Array(pdf) both copies (pdf.js transfers/detaches the buffer it's given, so the
+  // caller's bytes must not be handed over directly) and normalises a Node Buffer (a Uint8Array
+  // subclass) to a plain Uint8Array, which pdf.js otherwise refuses with "Please provide binary
+  // data as Uint8Array, rather than Buffer".
+  const data = new Uint8Array(pdf);
   const loadingTask = getDocument({ data });
-  const doc = await loadingTask.promise;
   try {
+    const doc = await loadingTask.promise;
     const page = await doc.getPage(pageIndex + 1); // pdf.js pages are 1-based
     try {
       const scale = dpi / 72;
@@ -55,15 +55,13 @@ export async function measure(pdf: Uint8Array, pageIndex: number, opts: MeasureO
       const canvas = createCanvas(width, height);
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('measure: createCanvas returned a canvas with no 2d context');
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, width, height);
-      // pdf.js's types declare canvas/canvasContext as DOM types; a Node canvas (@napi-rs/canvas)
-      // is a structural match at runtime but not nominally, hence the casts.
-      await page.render({
-        canvasContext: ctx as unknown as CanvasRenderingContext2D,
-        viewport,
-        canvas: canvas as unknown as HTMLCanvasElement,
-      }).promise;
+      // Pass `canvas`, not `canvasContext`: pdf.js's own beginDrawing() fills it white via
+      // canvasContext.canvas before drawing, and when `canvas` is given it fetches the context
+      // itself (ignoring `canvasContext`) via canvas.getContext('2d', ...), so there is no need
+      // to pre-fill or pass our own context in. pdf.js's types declare `canvas` as a DOM
+      // HTMLCanvasElement; a Node canvas (@napi-rs/canvas) is a structural match at runtime but
+      // not nominally, hence the cast.
+      await page.render({ viewport, canvas: canvas as unknown as HTMLCanvasElement }).promise;
 
       const { data: pixels } = ctx.getImageData(0, 0, width, height);
       let minX = Infinity;
