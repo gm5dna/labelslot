@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "labelslot": "./src/cli.ts"
+    "labelslot": "src/cli.ts"
   },
   "files": [
     "src",
