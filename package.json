@@ -46,5 +46,13 @@
     "@types/node": "24.13.4",
     "esbuild": "0.28.2",
     "typescript": "7.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gm5dna/labelslot.git"
+  },
+  "homepage": "https://github.com/gm5dna/labelslot#readme",
+  "bugs": {
+    "url": "https://github.com/gm5dna/labelslot/issues"
   }
 }

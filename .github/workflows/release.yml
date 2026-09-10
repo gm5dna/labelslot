@@ -22,9 +22,8 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm pack
-      - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Trusted publishing (OIDC): no token; npm generates provenance automatically.
+      - run: npm publish --access public
       - uses: softprops/action-gh-release@v2
         with:
           files: '*.tgz'
