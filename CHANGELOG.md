@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 - 2026-09-12
+
+- Fix: the published CLI did not run (`npx labelslot` failed because Node does not type-strip `.ts` files inside node_modules). The bin is now a bundled `dist/cli.js` built at pack time; CI installs the packed tarball and runs it.
+
 ## 0.1.0 - 2026-09-12
 
 - Project scaffold: module boundaries, interface stubs, synthetic fixture generator, CI.

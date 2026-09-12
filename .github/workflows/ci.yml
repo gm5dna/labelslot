@@ -12,3 +12,6 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      # Guard against shipping something Node cannot run from node_modules (e.g. raw .ts): install
+      # the packed tarball into an empty project and run the bin from there.
+      - run: npm pack && mkdir /tmp/packtest && cd /tmp/packtest && npm init -y >/dev/null && npm install "$GITHUB_WORKSPACE"/labelslot-*.tgz && npx labelslot --list-sheets
