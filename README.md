@@ -26,7 +26,7 @@ npm install -g labelslot
 
 ### Desktop app
 
-- **macOS**: download the `.dmg` from the [Releases page](https://github.com/gm5dna/labelslot/releases), open it, and drag labelslot to Applications. It's signed and notarised, so it opens normally.
+- **macOS**: download the `.dmg` from the [Releases page](https://github.com/gm5dna/labelslot/releases), open it, and drag labelslot to Applications. Releases from 0.1.1 are not yet signed: if macOS says the app cannot be opened, right-click the app in Applications, choose Open, and confirm once. Signed and notarised builds are coming.
 - **Windows**: download the `-setup.exe` installer. Windows SmartScreen will warn because the build isn't code-signed: choose "More info", then "Run anyway".
 - **Linux**: download the `.AppImage` (make it executable first: `chmod +x labelslot_*.AppImage`) or the `.deb`.
 
