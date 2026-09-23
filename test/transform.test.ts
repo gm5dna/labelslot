@@ -270,7 +270,9 @@ test('calibrationPage: one A4 page with crosshairs at every position and a nudge
   // 4 corners x (2 crosshair hairlines + 2 arms x 11 rule ticks) x 4 positions on ll04.
   const lCount = (content.match(/(?:^|\s)l\s/g) ?? []).length;
   assert.ok(lCount >= 384, `expected at least 384 l operators, got ${lCount}`);
-  assert.ok(extractText(content).includes('--nudge'));
+  const text = extractText(content);
+  assert.ok(text.includes('--nudge'));
+  assert.ok(text.includes('negative nudge'));
 });
 
 test('multi-page: two source pages placed on the same output page embed as two distinct XObjects', async () => {

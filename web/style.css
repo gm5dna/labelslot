@@ -12,7 +12,7 @@
 
   --ink: #eef2f8;
   --ink-dim: #93a1b8;
-  --ink-faint: #66748c;
+  --ink-faint: #8593ab; /* 4.9:1 on --panel #1b2636 (WCAG), was #66748c at 3.2:1 */
 
   --amber: #f5a623;
   --amber-strong: #ffc966;
@@ -202,8 +202,10 @@ main.panes {
   cursor: pointer;
 }
 .label-box.selected { stroke: var(--amber); stroke-width: 2; }
-.label-box.used { fill: var(--edge-soft); }
+.label-box.used { fill: url(#used-hatch); }
 .label-box:focus-visible { outline-offset: -2px; }
+.used-hatch-bg { fill: var(--edge-soft); }
+.used-hatch-line { stroke: var(--ink-faint); stroke-width: 2; }
 .label-box-number, .label-box-used-text {
   font-family: var(--mono);
   text-anchor: middle;
@@ -213,10 +215,10 @@ main.panes {
 .label-box-number { fill: var(--ink-dim); }
 .label-box-used-text { fill: var(--ink-faint); }
 
+/* grid-template-columns is set inline in JS to match the sheet's column count. */
 #used-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  gap: 2px var(--gap-s);
   font-family: var(--mono);
   font-size: 12px;
   margin-top: var(--gap-m);
@@ -243,6 +245,21 @@ main.panes {
   flex-direction: column;
   gap: 2px;
 }
+#file-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-s); }
+#file-list li.empty-state { color: var(--ink-faint); font-family: var(--ui); white-space: normal; }
+.file-remove-btn {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--ink-faint);
+  font-size: 12px;
+  line-height: 1;
+}
+.file-remove-btn:hover { color: var(--red); background: var(--edge-soft); }
 
 /* ---- preview pane ---- */
 #preview-body {
@@ -279,11 +296,11 @@ main.panes {
 }
 .status-left { flex: 1 1 auto; min-width: 0; overflow: hidden; }
 #report-lines { color: var(--ink-dim); max-height: 3.5em; overflow-y: auto; }
-#report-lines .warn-line { color: var(--yellow); }
 .status-right { display: flex; align-items: center; gap: var(--gap-m); flex-shrink: 0; }
 
 /* In normal flow (not absolutely positioned over .status-normal) so the bar grows to fit a
-   wrapped message instead of collapsing to its own min-height while the sibling is hidden. */
+   wrapped message instead of collapsing to its own min-height while the sibling is hidden.
+   Stacked above .status-normal, which stays visible (printing reminder, "runs locally"). */
 .status-error {
   display: flex;
   align-items: center;
@@ -292,6 +309,21 @@ main.panes {
   padding: var(--gap-s) var(--gap-l);
   white-space: pre-wrap;
   font-family: var(--mono);
+  border-bottom: 1px solid var(--edge);
+}
+
+/* Dedicated, non-scrolling warning line (Non-negotiable 5): always visible, never buried in
+   #report-lines' 3.5em scroll box. Stacked above the error box and the normal status line. */
+.status-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(245, 166, 35, .12);
+  color: var(--amber-strong);
+  padding: var(--gap-s) var(--gap-l);
+  font-family: var(--mono);
+  white-space: pre-wrap;
+  border-bottom: 1px solid var(--edge);
 }
 
 /* ---- help popover ---- */

@@ -121,7 +121,8 @@ export async function calibrationPage(sheet: Sheet): Promise<Uint8Array> {
   const noteMm = Math.min(pageHeightMm - 6, lowestY + 6);
   const lines = [
     `${sheet.id}: ${sheet.name}`,
-    'Print at 100% / Actual size. Measure crosshair to label corner; pass as --nudge=X,Y (mm, +x right, +y down).',
+    'Print at 100% / Actual size. If a crosshair prints right of / below the label corner, enter ' +
+      'that distance as a negative nudge X / Y (mm). CLI: --nudge=X,Y.',
   ];
   lines.forEach((line, i) => page.drawText(line, { x: pt(15), y: pt(pageHeightMm - noteMm - i * 3), size: 5, font, color: BLACK }));
 
