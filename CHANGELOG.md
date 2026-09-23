@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 - 2026-09-23
 
 - Fix (web): used positions were forgotten after the second run on a sheet, so the next run could print over a label already used. Used positions now accumulate across runs on the same sheet.
 - Fix (web): a run that would print over a position marked used is blocked with a message naming the position.

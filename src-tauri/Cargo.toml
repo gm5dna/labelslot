@@ -1,6 +1,6 @@
 [package]
 name = "labelslot"
-version = "0.1.1"
+version = "0.1.2"
 description = "Move a shipping label PDF to any position on an A4 label sheet or onto a 4x6 thermal label, without scaling it."
 edition = "2021"
 
