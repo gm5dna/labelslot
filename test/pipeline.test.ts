@@ -155,6 +155,21 @@ test('too-large with --allow-scale: succeeds, shrinks, and warns about 203 dpi s
   );
 });
 
+test('a Buffer input is left untouched by run(), and the same Uint8Array can be run() twice', async () => {
+  const bytes = await makeLabelPdf();
+  const buf = Buffer.from(bytes);
+  const { report: report1 } = await run([buf], { sheet: ll04, pos: 2, createCanvas });
+  assert.equal(report1.length, 1);
+  // pdf.js transfers/detaches the array it's handed, truncating it to length 0; the pipeline's
+  // `new Uint8Array(bytes)` copy (mirroring measure.ts) must leave the caller's buffer intact.
+  assert.equal(buf.length, bytes.length);
+
+  // A second run() on the same (uncopied, un-detached) input must also succeed.
+  const { report: report2 } = await run([bytes], { sheet: ll04, pos: 3, createCanvas });
+  assert.equal(report2.length, 1);
+  assert.equal(report2[0].position, 3);
+});
+
 test('CropBox differing from MediaBox rejects', async () => {
   const bytes = await makeLabelPdf();
   const doc = await PDFDocument.load(bytes);
