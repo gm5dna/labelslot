@@ -22,18 +22,19 @@
       <div class="tool-group">
         <span class="eyebrow">Printer</span>
         <label class="visually-hidden" for="printer-name">Printer name</label>
-        <input type="text" id="printer-name" placeholder="e.g. Office Brother laser" />
+        <input type="text" id="printer-name" list="printer-names" placeholder="e.g. Office Brother laser" />
+        <datalist id="printer-names"></datalist>
       </div>
       <div class="tool-group">
         <span class="eyebrow">Nudge</span>
         <span class="field">
           <span class="field-label">X</span>
-          <input type="number" id="nudge-x" class="mono" step="0.1" value="0" />
+          <input type="number" id="nudge-x" class="mono" step="0.1" value="0" title="+X moves the label right, +Y moves it down (mm)." />
           <span class="unit">mm</span>
         </span>
         <span class="field">
           <span class="field-label">Y</span>
-          <input type="number" id="nudge-y" class="mono" step="0.1" value="0" />
+          <input type="number" id="nudge-y" class="mono" step="0.1" value="0" title="+X moves the label right, +Y moves it down (mm)." />
           <span class="unit">mm</span>
         </span>
         <button type="button" id="calibrate-btn" class="btn">Calibration page&hellip;</button>
@@ -59,14 +60,14 @@
           <option value="top-left">Top-left</option>
         </select>
         <span class="field">
-          <span class="field-label">assume position</span>
-          <input type="number" id="assume-pos" class="mono" min="1" step="1" />
+          <span class="field-label">Assume position</span>
+          <input type="number" id="assume-pos" class="mono" min="1" step="1" title="Skip detection: treat the label as sitting where position N would be. Try this if detection fails." />
         </span>
         <label class="checkbox-label">
           <input type="checkbox" id="allow-scale" />
           Allow scale (shrink to fit)
         </label>
-        <span class="hint">Shrinking the datamatrix can push its module size below what a 203&nbsp;dpi print head resolves, producing a label that looks fine and will not scan.</span>
+        <span class="hint" id="allow-scale-hint" hidden>Shrinking the datamatrix can push its module size below what a 203&nbsp;dpi print head resolves, producing a label that looks fine and will not scan.</span>
       </div>
     </div>
 
@@ -96,6 +97,8 @@
     </main>
 
     <footer class="status-bar">
+      <div id="warning-box" class="status-warning" hidden></div>
+      <div id="error-box" class="status-error" role="alert" hidden></div>
       <div id="status-normal" class="status-normal">
         <div class="status-left">
           <div id="report-lines" class="mono"></div>
@@ -114,7 +117,6 @@
           </details>
         </div>
       </div>
-      <div id="error-box" class="status-error" hidden></div>
     </footer>
   </div>
 

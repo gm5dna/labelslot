@@ -3,20 +3,37 @@
 import type { PageReport } from '../src/pipeline.ts';
 
 /**
- * The used set to persist after a run: only the positions filled on the LAST output page (the
- * physical sheet the user is left holding). Earlier output pages in a multi-page run are full
- * printed sheets and are not tracked. When the last page is itself full, nothing carries
- * forward - the next sheet is fresh.
+ * The used set to persist after a run, given the used set from BEFORE the run (`prev`).
+ * If the whole run landed on the first output page (the sheet the user is left holding),
+ * the newly-filled positions accumulate onto `prev` (an earlier partial run on this same sheet
+ * is still remembered). If the run spilled onto later output pages, only the LAST page's
+ * positions are tracked (the physical sheet left in the tray); earlier pages in that run are
+ * full printed sheets and `prev` no longer applies to what's in the tray now. When the result
+ * has every position, nothing carries forward - the next sheet is fresh.
  */
-export function nextUsed(report: PageReport[], count: number): Set<number> {
-  if (report.length === 0) return new Set();
+export function nextUsed(prev: Set<number>, report: PageReport[], count: number): Set<number> {
+  if (report.length === 0) return prev;
+  const spilled = report.some((r) => r.outputPage > 0);
   const lastOutputPage = Math.max(...report.map((r) => r.outputPage));
   const positions = report.filter((r) => r.outputPage === lastOutputPage).map((r) => r.position);
-  return positions.length >= count ? new Set() : new Set(positions);
+  const result = spilled ? new Set(positions) : new Set([...prev, ...positions]);
+  return result.size >= count ? new Set() : result;
 }
 
 /** The first 1-based position not in `used`, up to `count`. Falls back to 1 when all are used. */
 export function firstUnused(used: Set<number>, count: number): number {
   for (let pos = 1; pos <= count; pos++) if (!used.has(pos)) return pos;
   return 1;
+}
+
+/**
+ * The pipeline fills positions start, start+1, ... consecutively on the first output sheet
+ * (spilling to a fresh page only past `count`). Returns the positions in `used` that a run
+ * starting at `start` with `labels` total labels would print over on that first sheet.
+ */
+export function usedOverlap(used: Set<number>, start: number, labels: number, count: number): number[] {
+  const end = Math.min(start + labels - 1, count);
+  const overlap: number[] = [];
+  for (let pos = start; pos <= end; pos++) if (used.has(pos)) overlap.push(pos);
+  return overlap;
 }
