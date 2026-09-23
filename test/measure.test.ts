@@ -107,7 +107,7 @@ test('pages: 3 measures each page independently (distinct pages, not just distin
   nearBox(page2.bbox, RELOCATED_LABEL, 0.8, 'page 2 bbox');
 });
 
-test('measurePage on a single loaded doc gives the same bboxes as measure() per page', async () => {
+test('measurePage on a single loaded doc measures each page independently against fixed expectations', async () => {
   const out = await PDFDocument.create();
   const plainSrc = await PDFDocument.load(await makeLabelPdf());
   const blankSrc = await PDFDocument.create();
@@ -125,11 +125,17 @@ test('measurePage on a single loaded doc gives the same bboxes as measure() per 
   const loadingTask = getDocument({ data: new Uint8Array(pdf) });
   try {
     const doc = await loadingTask.promise;
-    for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
-      const viaMeasure = await measure(pdf, pageIndex, { createCanvas });
-      const viaMeasurePage = await measurePage(doc, pageIndex, { createCanvas });
-      assert.deepEqual(viaMeasurePage, viaMeasure, `page ${pageIndex}`);
-    }
+
+    const page0 = await measurePage(doc, 0, { createCanvas });
+    assert.ok(page0.bbox);
+    nearBox(page0.bbox, REF_LABEL, 0.8, 'page 0 bbox');
+
+    const page1 = await measurePage(doc, 1, { createCanvas });
+    assert.equal(page1.bbox, null);
+
+    const page2 = await measurePage(doc, 2, { createCanvas });
+    assert.ok(page2.bbox);
+    nearBox(page2.bbox, RELOCATED_LABEL, 0.8, 'page 2 bbox');
   } finally {
     await loadingTask.destroy();
   }
