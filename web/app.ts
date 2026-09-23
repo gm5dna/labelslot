@@ -67,6 +67,11 @@ let selectedPos = firstUnused(usedPositions, sheetCount(currentSheet));
 type FileEntry = { name: string; bytes: Uint8Array; pages: number };
 let files: FileEntry[] = [];
 
+/** Bumped by hideResult(). doRun captures the value before awaiting run() and discards the
+ * result if it no longer matches - a setting changed mid-run (which calls hideResult()) must
+ * not let a stale result (and its used-position bookkeeping) land after the fact. */
+let resultGeneration = 0;
+
 // ---- DOM refs ----
 const sheetSelect = el<HTMLSelectElement>('sheet-select');
 const gridSvg = el<SVGSVGElement>('grid-svg');
@@ -300,9 +305,15 @@ printerNameInput.addEventListener('change', () => {
   const name = printerNameInput.value.trim();
   storageSet(LAST_PRINTER_KEY, name);
   if (name) {
-    const n = loadNudge(name);
-    nudgeXInput.value = String(n.x);
-    nudgeYInput.value = String(n.y);
+    if (storageGet(nudgeKey(name)) === null) {
+      // No saved nudge for this printer yet: keep the current X/Y and save them under the new
+      // name, rather than resetting the fields to 0/0.
+      saveNudge(name);
+    } else {
+      const n = loadNudge(name);
+      nudgeXInput.value = String(n.x);
+      nudgeYInput.value = String(n.y);
+    }
   }
   hideResult();
 });
@@ -443,13 +454,6 @@ function renderFileList(): void {
 renderFileList();
 
 // ---- CLI-to-UI wording: pipeline/geometry error messages are written for the CLI ----
-function humanizeFlag(flag: string): string {
-  return flag
-    .split('-')
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(' ');
-}
-
 /** input N, page M -> <file name>, page M, using the file list from the run that failed. */
 function mapInputPrefix(message: string, fileNames: string[]): string {
   return message.replace(/^input (\d+), page (\d+)/, (whole, n: string, p: string) => {
@@ -458,12 +462,16 @@ function mapInputPrefix(message: string, fileNames: string[]): string {
   });
 }
 
-/** CLI flag wording -> UI wording. Specific flags first, then a generic --flag -> "Flag" fallback. */
+/**
+ * CLI flag wording -> UI wording, for the two flags the UI actually surfaces as options
+ * elsewhere on the page. Run before mapInputPrefix so a file name that happens to contain
+ * "--" is never mistaken for a flag.
+ */
 function mapCliWording(message: string, fileNames: string[]): string {
-  let msg = mapInputPrefix(message, fileNames);
+  let msg = message;
   msg = msg.replace(/--assume-position(?:\s+N)?/g, 'the "Assume position" option');
   msg = msg.replace(/--allow-scale/g, '"Allow scale"');
-  msg = msg.replace(/--([a-z][a-z-]*)(?:=\S+)?/g, (_whole, flag: string) => `"${humanizeFlag(flag)}"`);
+  msg = mapInputPrefix(msg, fileNames);
   return msg;
 }
 
@@ -477,6 +485,7 @@ function hideError(): void {
   errorBox.textContent = '';
 }
 function hideResult(): void {
+  resultGeneration++;
   reportLines.textContent = '';
   warningBox.hidden = true;
   warningBox.textContent = '';
@@ -509,20 +518,17 @@ function showWarnings(warnings: string[]): void {
   warningBox.hidden = false;
 }
 
-function showSaved(filename: string): void {
-  addReportLine(`Saved ${filename}. Check your Downloads folder.`);
-}
-
 /**
  * Marks `report`'s positions used, starting from the used set captured when the run started
  * (`before`), not whatever usedPositions has become since (e.g. a second download of the same
- * result). Called from the Download button, once per result - see showResult.
+ * result). Called from the Download button, once per result - see showResult. Takes the run's
+ * own sheet rather than reading currentSheet, in case the displayed sheet has moved on.
  */
-function markUsedFromRun(report: PageReport[], before: UsedSet): void {
-  const count = sheetCount(currentSheet);
+function markUsedFromRun(sheet: Sheet, report: PageReport[], before: UsedSet): void {
+  const count = sheetCount(sheet);
   if (count === 1) return; // no "used" concept for single-label media
   usedPositions = nextUsed(before, report, count);
-  saveUsed(currentSheet.id, usedPositions);
+  saveUsed(sheet.id, usedPositions);
   selectedPos = firstUnused(usedPositions, count);
   renderSheetUI();
 }
@@ -554,9 +560,15 @@ function showResult(
     downloadBytes(pdf, filename);
     if (!applied) {
       applied = true;
-      markUsedFromRun(report, usedBeforeRun);
+      markUsedFromRun(sheet, report, usedBeforeRun);
+      // Clear the file list only now, not when the PDF was made: before Download, the files
+      // stay in place so a failed/retried download can be tried again without re-adding them.
+      // Clearing after means adding the next label can't accidentally reprint this one.
+      files = [];
+      renderFileList();
+      addReportLine(`Saved ${filename}.`);
+      addReportLine('Files cleared after download.');
     }
-    showSaved(filename);
   };
 }
 
@@ -584,11 +596,14 @@ async function renderPreview(pdfBytes: Uint8Array, sheet: Sheet): Promise<void> 
         const cssW = Math.ceil(cssViewport.width);
         const cssH = Math.ceil(cssViewport.height);
 
+        // Only width is pinned; height is left to the CSS default of 'auto' so the browser
+        // scales it to match the canvas's intrinsic (bitmap) aspect ratio. A pinned height
+        // here would distort the image (and desync the overlay) once max-width:100% shrinks
+        // the displayed width below cssW, e.g. when the preview pane is narrower than 794px.
         const canvas = document.createElement('canvas');
         canvas.width = Math.ceil(renderViewport.width);
         canvas.height = Math.ceil(renderViewport.height);
         canvas.style.width = `${cssW}px`;
-        canvas.style.height = `${cssH}px`;
         await page.render({ viewport: renderViewport, canvas }).promise;
 
         const wrap = document.createElement('div');
@@ -626,6 +641,7 @@ runBtn.addEventListener('click', () => void doRun());
 async function doRun(): Promise<void> {
   hideError();
   hideResult();
+  const runGeneration = resultGeneration;
   if (files.length === 0) {
     showError('Choose at least one PDF first.');
     return;
@@ -653,6 +669,7 @@ async function doRun(): Promise<void> {
   }
 
   const usedBeforeRun = new Set(usedPositions);
+  const runSheet = currentSheet;
   const inputNames = files.map((f) => f.name);
   const runBtnLabel = runBtn.textContent;
   runBtn.disabled = true;
@@ -661,7 +678,7 @@ async function doRun(): Promise<void> {
     const { pdf, report } = await run(
       files.map((f) => f.bytes),
       {
-        sheet: currentSheet,
+        sheet: runSheet,
         pos,
         align,
         nudge,
@@ -670,9 +687,11 @@ async function doRun(): Promise<void> {
         createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
       },
     );
-    showResult(pdf, report, inputNames, currentSheet, pos, usedBeforeRun);
-    await renderPreview(pdf, currentSheet);
+    if (runGeneration !== resultGeneration) return; // a setting changed mid-run; discard
+    showResult(pdf, report, inputNames, runSheet, pos, usedBeforeRun);
+    await renderPreview(pdf, runSheet);
   } catch (err) {
+    if (runGeneration !== resultGeneration) return; // a setting changed mid-run; discard
     showError(mapCliWording(err instanceof Error ? err.message : String(err), inputNames));
   } finally {
     runBtn.disabled = false;

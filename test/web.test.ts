@@ -76,6 +76,8 @@ test('usedOverlap: no overlap when the run stays clear of used positions', () =>
 
 test('usedOverlap: only positions on the first sheet count, not a spilled second page', () => {
   // Starting at 3 with 4 labels on a 4-up sheet fills 3, 4, then spills to 1, 2 of a new page.
-  // A used position 1 on the CURRENT sheet is not overlapped by that spill.
+  // A used position 1 is never printed over by this run (it's on the spilled page), so no
+  // overlap; a used position 4 IS on the first sheet (positions 3, 4), so it does overlap.
   assert.deepEqual(usedOverlap(new Set([1]), 3, 4, 4), []);
+  assert.deepEqual(usedOverlap(new Set([4]), 3, 4, 4), [4]);
 });
