@@ -51,6 +51,18 @@ test('conversion writes a PDF with the right page count and prints the 100% remi
   assert.equal(doc.getPages().length, 1);
 });
 
+test('--used 2,3 skips those positions on the first sheet', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'labelslot-cli-'));
+  const inPath = join(dir, 'in.pdf');
+  const outPath = join(dir, 'out.pdf');
+  await writeFile(inPath, await makeLabelPdf({ pages: 2 }));
+
+  const { code, stdout } = await runMain(['--sheet', 'll04', '--used', '2,3', inPath, '-o', outPath]);
+  assert.equal(code, 0);
+  assert.match(stdout, /page 1 position 1/);
+  assert.match(stdout, /page 1 position 4/);
+});
+
 test('calibrate writes a one-page PDF', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'labelslot-cli-'));
   const outPath = join(dir, 'cal.pdf');

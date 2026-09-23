@@ -82,7 +82,7 @@ ty = pt(out.h - src.h) - pt(dy) - pt(src.y)
 
 ## Output
 
-- One PDF, pages sized to the sheet's page (A4 for the seeded sheets, regardless of the input's page size). Sheet target: fill positions in order from `--pos`, spilling onto further pages. Single-label target: one page per input page.
+- One PDF, pages sized to the sheet's page (A4 for the seeded sheets, regardless of the input's page size). Sheet target: fill positions in order from `--pos`, skipping any given as used on the first sheet, spilling onto further pages. Single-label target: one page per input page.
 - Thermal media box is exactly 288 × 432 pt (or 432 × 288 with `/Rotate 90`). No printer margin, no bleed.
 - The pipeline fails fast, writing nothing, on the first page that cannot be placed. Partial sheets are worse than no output.
 - `labelslot calibrate --sheet ll04 -o test.pdf`: one page with crosshairs and a mm rule at each label's corners, for finding the nudge once per printer.
@@ -96,7 +96,7 @@ labelslot --list-sheets
 labelslot calibrate --sheet ll04 -o test.pdf
 ```
 
-Options: `--pos N` (default 1), `--assume-position N`, `--align centre|top-left`, `--nudge X,Y` (mm), `--sheets file.json`, `--allow-scale`, `--dpi N`. Exit 0 on success with a one-line summary per page (input, page, position, rotated or not) and the 100% printing reminder; exit 1 with the message on stderr on any failure. Every page of every input file is a label.
+Options: `--pos N` (default 1), `--used N,N,...` (positions already used on the first sheet, skipped), `--assume-position N`, `--align centre|top-left`, `--nudge X,Y` (mm), `--sheets file.json`, `--allow-scale`, `--dpi N`. Exit 0 on success with a one-line summary per page (input, page, position, rotated or not) and the 100% printing reminder; exit 1 with the message on stderr on any failure. Every page of every input file is a label.
 
 ## Tests
 

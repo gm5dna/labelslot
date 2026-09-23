@@ -50,6 +50,14 @@ test('pages: 5 fixture, ll04 pos 3: spills to a second output page at positions 
   assert.deepEqual(report.map((r) => r.position), [3, 4, 1, 2, 3]);
 });
 
+test('skip 2,3 on ll04 pos 1: three labels fill 1, 4, then 1 of a fresh sheet', async () => {
+  const pdf = await makeLabelPdf({ pages: 3 });
+  const { report } = await run([pdf], { sheet: ll04, pos: 1, skip: [2, 3], createCanvas });
+
+  assert.deepEqual(report.map((r) => r.outputPage), [0, 0, 1]);
+  assert.deepEqual(report.map((r) => r.position), [1, 4, 1]);
+});
+
 test('two inputs on 6x4: one page per label, a landscape label rotates and is centred', async () => {
   const pdfA = await makeLabelPdf({ pages: 1 });
   // Landscape: too wide for the portrait label but fits once turned 90 degrees.

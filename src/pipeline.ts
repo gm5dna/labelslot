@@ -10,6 +10,8 @@ export type RunOptions = {
   sheet: Sheet;
   /** Starting position on the sheet, 1-based. Default 1. Later labels fill following positions, spilling onto new pages. */
   pos?: number;
+  /** Positions to leave empty on the first output page only (already used on the sheet). Later pages are fresh sheets. */
+  skip?: number[];
   align?: Align;
   nudge?: { x: number; y: number };
   allowScale?: boolean;
@@ -52,6 +54,7 @@ export async function run(inputs: Uint8Array[], opts: RunOptions): Promise<{ pdf
   const report: PageReport[] = [];
 
   let pos = opts.pos ?? 1;
+  const skip = new Set(opts.skip);
   let outputPageIndex = -1;
   let currentPage: PDFPage | undefined;
 
@@ -117,6 +120,7 @@ export async function run(inputs: Uint8Array[], opts: RunOptions): Promise<{ pdf
           );
         }
 
+        while (outputPageIndex <= 0 && skip.has(pos)) pos++;
         let needNewPage = outputPageIndex === -1;
         if (outputPageIndex !== -1 && pos > capacity) {
           pos = 1;

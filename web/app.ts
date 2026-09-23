@@ -8,7 +8,7 @@ import { labelBox, type Align, type Sheet } from '../src/geometry.ts';
 import { BUILTIN_SHEETS, findSheet } from '../src/sheets.ts';
 import { run, type PageReport } from '../src/pipeline.ts';
 import { calibrationPage } from '../src/transform.ts';
-import { nextUsed, firstUnused, usedOverlap } from './used.ts';
+import { nextUsed, firstUnused } from './used.ts';
 
 function el<T extends Element = HTMLElement>(id: string): T {
   const e = document.getElementById(id);
@@ -655,19 +655,6 @@ async function doRun(): Promise<void> {
   const allowScale = allowScaleCheckbox.checked;
   const nudge = { x: Number(nudgeXInput.value) || 0, y: Number(nudgeYInput.value) || 0 };
 
-  if (count > 1) {
-    const totalLabels = files.reduce((sum, f) => sum + f.pages, 0);
-    const overlap = usedOverlap(usedPositions, pos, totalLabels, count);
-    if (overlap.length > 0) {
-      const plural = overlap.length > 1;
-      showError(
-        `Position${plural ? 's' : ''} ${overlap.join(', ')} ${plural ? 'are' : 'is'} marked used; ` +
-          `choose another start position or untick ${plural ? 'them' : 'it'}.`,
-      );
-      return;
-    }
-  }
-
   const usedBeforeRun = new Set(usedPositions);
   const runSheet = currentSheet;
   const inputNames = files.map((f) => f.name);
@@ -680,6 +667,7 @@ async function doRun(): Promise<void> {
       {
         sheet: runSheet,
         pos,
+        skip: count === 1 ? [] : [...usedPositions],
         align,
         nudge,
         allowScale,

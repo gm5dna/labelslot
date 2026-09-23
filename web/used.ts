@@ -26,14 +26,3 @@ export function firstUnused(used: Set<number>, count: number): number {
   return 1;
 }
 
-/**
- * The pipeline fills positions start, start+1, ... consecutively on the first output sheet
- * (spilling to a fresh page only past `count`). Returns the positions in `used` that a run
- * starting at `start` with `labels` total labels would print over on that first sheet.
- */
-export function usedOverlap(used: Set<number>, start: number, labels: number, count: number): number[] {
-  const end = Math.min(start + labels - 1, count);
-  const overlap: number[] = [];
-  for (let pos = start; pos <= end; pos++) if (used.has(pos)) overlap.push(pos);
-  return overlap;
-}

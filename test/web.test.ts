@@ -1,7 +1,7 @@
 // DOM-free tests for the web UI's pure used-position logic (web/used.ts).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { nextUsed, firstUnused, usedOverlap } from '../web/used.ts';
+import { nextUsed, firstUnused } from '../web/used.ts';
 import type { PageReport } from '../src/pipeline.ts';
 
 /** Hand-written report entries; nextUsed/firstUnused only look at outputPage and position. */
@@ -64,20 +64,4 @@ test('nextUsed: a spilled run replaces prev with only the last page\'s positions
   ]);
   const used = nextUsed(prev, report, 4);
   assert.deepEqual([...used], [1]);
-});
-
-test('usedOverlap: a run starting at 2 with 2 labels overlaps used position 3', () => {
-  assert.deepEqual(usedOverlap(new Set([3]), 2, 2, 4), [3]);
-});
-
-test('usedOverlap: no overlap when the run stays clear of used positions', () => {
-  assert.deepEqual(usedOverlap(new Set([3]), 1, 2, 4), []);
-});
-
-test('usedOverlap: only positions on the first sheet count, not a spilled second page', () => {
-  // Starting at 3 with 4 labels on a 4-up sheet fills 3, 4, then spills to 1, 2 of a new page.
-  // A used position 1 is never printed over by this run (it's on the spilled page), so no
-  // overlap; a used position 4 IS on the first sheet (positions 3, 4), so it does overlap.
-  assert.deepEqual(usedOverlap(new Set([1]), 3, 4, 4), []);
-  assert.deepEqual(usedOverlap(new Set([4]), 3, 4, 4), [4]);
 });

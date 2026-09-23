@@ -69,6 +69,12 @@ Give it several PDFs, or a PDF with several pages, and the labels fill the follo
 labelslot --sheet ll04 --pos 2 order1.pdf order2.pdf order3.pdf -o out.pdf
 ```
 
+If some positions in the middle of the sheet are already used, list them with `--used` and they are skipped. Here labels go on positions 1 and 4, then position 1 of a new page:
+
+```
+labelslot --sheet ll04 --used 2,3 order1.pdf order2.pdf order3.pdf -o out.pdf
+```
+
 ## Supported sheets
 
 | id | label size | per sheet | vendor names |

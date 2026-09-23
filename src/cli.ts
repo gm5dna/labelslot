@@ -5,7 +5,7 @@
 //   labelslot --target 6x4 in.pdf -o out.pdf        (--target is a synonym for --sheet)
 //   labelslot --list-sheets
 //   labelslot calibrate --sheet ll04 -o test.pdf
-// Options: --pos N (default 1), --assume-position N, --align centre|top-left, --nudge X,Y (mm),
+// Options: --pos N (default 1), --used N,N..., --assume-position N, --align centre|top-left, --nudge X,Y (mm),
 //          --sheets file.json, --allow-scale, --dpi N, -o/--output FILE, --list-sheets, -h/--help
 import { readFile, writeFile } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
@@ -31,6 +31,7 @@ Usage:
 Options:
   --sheet, --target ID     Sheet to place onto (required unless --list-sheets)
   --pos N                  Starting position on the sheet, 1-based (default 1)
+  --used N,N,...           Positions already used on the first sheet; they are skipped
   --assume-position N      Skip measurement; assume the input occupies position N
   --align centre|top-left  Alignment within the label (default centre)
   --nudge X,Y              Shift the placement by X,Y mm (+x right, +y down)
@@ -49,6 +50,7 @@ const OPTIONS = {
   sheet: { type: 'string' },
   target: { type: 'string' },
   pos: { type: 'string' },
+  used: { type: 'string' },
   'assume-position': { type: 'string' },
   align: { type: 'string' },
   nudge: { type: 'string' },
@@ -154,6 +156,7 @@ export async function main(argv: string[]): Promise<number> {
     const opts: RunOptions = {
       sheet,
       pos: values.pos !== undefined ? num('--pos', values.pos) : undefined,
+      skip: values.used !== undefined ? values.used.split(',').map((p) => num('--used', p)) : undefined,
       align: parseAlign(values.align),
       nudge: values.nudge !== undefined ? parseNudge(values.nudge) : undefined,
       allowScale: !!values['allow-scale'],
