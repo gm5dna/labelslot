@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 - 2026-09-23
+
+- Used positions are skipped instead of blocking the run. With positions 2 and 3 marked used on a 4-up sheet, three labels go on 1, 4, then 1 of a new page. Web: the ticked used positions; CLI: new `--used N,N,...` option.
+
 ## 0.1.2 - 2026-09-23
 
 - Fix (web): used positions were forgotten after the second run on a sheet, so the next run could print over a label already used. Used positions now accumulate across runs on the same sheet.
