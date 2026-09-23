@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createCanvas } from '@napi-rs/canvas';
 import { PDFDocument } from '@cantoo/pdf-lib';
-import { measure, type CreateCanvas } from '../src/measure.ts';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { measure, measurePage, type CreateCanvas } from '../src/measure.ts';
 import { classify, pt, type Box } from '../src/geometry.ts';
 import { findSheet } from '../src/sheets.ts';
 import { makeLabelPdf, REF_LABEL, A4 } from './fixtures.ts';
@@ -104,6 +105,34 @@ test('pages: 3 measures each page independently (distinct pages, not just distin
   const page2 = await measure(pdf, 2, { createCanvas });
   assert.ok(page2.bbox);
   nearBox(page2.bbox, RELOCATED_LABEL, 0.8, 'page 2 bbox');
+});
+
+test('measurePage on a single loaded doc gives the same bboxes as measure() per page', async () => {
+  const out = await PDFDocument.create();
+  const plainSrc = await PDFDocument.load(await makeLabelPdf());
+  const blankSrc = await PDFDocument.create();
+  blankSrc.addPage([pt(A4.w), pt(A4.h)]);
+  const relocatedSrc = await PDFDocument.load(await makeLabelPdf({ label: RELOCATED_LABEL }));
+
+  const [plainPage] = await out.copyPages(plainSrc, [0]);
+  const [blankPage] = await out.copyPages(blankSrc, [0]);
+  const [relocatedPage] = await out.copyPages(relocatedSrc, [0]);
+  out.addPage(plainPage);
+  out.addPage(blankPage);
+  out.addPage(relocatedPage);
+  const pdf = await out.save({ useObjectStreams: false });
+
+  const loadingTask = getDocument({ data: new Uint8Array(pdf) });
+  try {
+    const doc = await loadingTask.promise;
+    for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
+      const viaMeasure = await measure(pdf, pageIndex, { createCanvas });
+      const viaMeasurePage = await measurePage(doc, pageIndex, { createCanvas });
+      assert.deepEqual(viaMeasurePage, viaMeasure, `page ${pageIndex}`);
+    }
+  } finally {
+    await loadingTask.destroy();
+  }
 });
 
 test('label far from the origin is measured there, not at a hard-coded origin', async () => {
