@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Fix (web): used positions were forgotten after the second run on a sheet, so the next run could print over a label already used. Used positions now accumulate across runs on the same sheet.
+- Fix (web): a run that would print over a position marked used is blocked with a message naming the position.
+- Web: positions are marked used on Download, not on Make PDF, so you can adjust the nudge and rerun. Files stay in the list until the first download, then clear. Changing any setting invalidates the previous result.
+- Web: warnings (including the shrink-to-fit warning) always visible; errors no longer hide the 100% printing reminder; GUI wording in place of CLI flags; busy state on Make PDF; remove a single file; duplicate files skipped; saved printer names offered; nudge direction explained; clearer used-position grid; sharper preview on high-DPI screens; better text contrast.
+- Calibration page explains the nudge for app users as well as the CLI.
+- Pipeline parses each input PDF once for measurement instead of once per page.
+
 ## 0.1.1 - 2026-09-12
 
 - Fix: the published CLI did not run (`npx labelslot` failed because Node does not type-strip `.ts` files inside node_modules). The bin is now a bundled `dist/cli.js` built at pack time; CI installs the packed tarball and runs it.
